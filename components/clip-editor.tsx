@@ -123,7 +123,7 @@ export function ClipEditor() {
 
   return (
     <div
-      className="relative h-dvh overflow-hidden bg-[#0c0c0c] text-[#f4f4f5] select-none"
+      className="flex h-dvh overflow-hidden bg-background text-foreground select-none"
       onDragOver={(event) => {
         event.preventDefault();
         setDragOver(true);
@@ -151,7 +151,22 @@ export function ClipEditor() {
           event.target.value = "";
         }}
       />
-      <div className="h-full py-6 pr-6 pl-[304px]">
+      <aside className="flex h-full w-72 shrink-0 flex-col overflow-auto border-r border-border bg-background">
+        <SidePanel
+          sliceCount={sliceCount}
+          background={background}
+          radius={radius}
+          hasImage={image !== null && frame !== null}
+          exporting={isExporting}
+          error={error}
+          onSliceCount={updateSliceCount}
+          onBackground={setBackground}
+          onRadius={updateRadius}
+          onPick={openPicker}
+          onExport={handleExport}
+        />
+      </aside>
+      <div className="min-h-0 min-w-0 flex-1 bg-muted">
         <Stage
           sliceCount={sliceCount}
           background={background}
@@ -163,19 +178,6 @@ export function ClipEditor() {
           onPick={openPicker}
         />
       </div>
-      <SidePanel
-        sliceCount={sliceCount}
-        background={background}
-        radius={radius}
-        hasImage={image !== null && frame !== null}
-        exporting={isExporting}
-        error={error}
-        onSliceCount={updateSliceCount}
-        onBackground={setBackground}
-        onRadius={updateRadius}
-        onPick={openPicker}
-        onExport={handleExport}
-      />
     </div>
   );
 }

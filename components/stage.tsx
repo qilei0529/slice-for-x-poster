@@ -181,8 +181,8 @@ export function Stage({
       {fitted.viewW > 0 ? (
         <div
           ref={stageRef}
-          className={`relative shadow-[0_24px_80px_rgba(0,0,0,0.45)] ${
-            dragOver ? "ring-2 ring-white" : "ring-1 ring-white/20"
+          className={`relative shadow-[0_24px_80px_rgba(0,0,0,0.12)] ${
+            dragOver ? "ring-2 ring-foreground" : "ring-1 ring-border"
           }`}
           style={{ width: fitted.viewW, height: fitted.viewH }}
         >
