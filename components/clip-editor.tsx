@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { PreviewDialog } from "@/components/preview-dialog";
+import { WelcomeDialog } from "@/components/welcome-dialog";
 import { SidePanel } from "@/components/side-panel";
 import { Stage } from "@/components/stage";
 import {
@@ -207,6 +208,7 @@ export function ClipEditor() {
           onExport={handleExport}
         />
       </aside>
+      <WelcomeDialog />
       <PreviewDialog
         open={previewOpen}
         images={images}
