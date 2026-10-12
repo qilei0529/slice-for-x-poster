@@ -15,25 +15,30 @@ import {
 } from "@/lib/constants";
 import { exportSlices } from "@/lib/export";
 import { containFrame, type Frame } from "@/lib/frame";
+import type { PlacedImage } from "@/lib/scene";
+
+const PLACE_OFFSET = 48;
 
 export function ClipEditor() {
   const inputRef = useRef<HTMLInputElement>(null);
-  const urlRef = useRef<string | null>(null);
+  const imagesRef = useRef<PlacedImage[]>([]);
+  const nextSlotRef = useRef(0);
+  const mountedRef = useRef(true);
   const sliceCountRef = useRef(DEFAULT_SLICES);
-  const loadIdRef = useRef(0);
   const [sliceCount, setSliceCount] = useState(DEFAULT_SLICES);
   const [background, setBackground] = useState(DEFAULT_BACKGROUND);
   const [radius, setRadius] = useState(DEFAULT_RADIUS);
-  const [image, setImage] = useState<HTMLImageElement | null>(null);
-  const [fileName, setFileName] = useState("clip");
-  const [frame, setFrame] = useState<Frame | null>(null);
+  const [images, setImages] = useState<PlacedImage[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [isExporting, startExport] = useTransition();
 
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
-      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+      mountedRef.current = false;
+      for (const item of imagesRef.current) URL.revokeObjectURL(item.url);
     };
   }, []);
 
@@ -47,73 +52,94 @@ export function ClipEditor() {
     setRadius(Math.min(MAX_RADIUS, Math.max(0, next)));
   }
 
+  function updateFrame(id: string, frame: Frame) {
+    setImages((current) => {
+      const next = current.map((item) =>
+        item.id === id ? { ...item, frame } : item,
+      );
+      imagesRef.current = next;
+      return next;
+    });
+  }
+
   function openPicker() {
     inputRef.current?.click();
   }
 
-  function loadFile(file: File) {
-    if (!file.type.startsWith("image/")) {
+  function loadFiles(fileList: FileList | File[]) {
+    const files = [...fileList].filter((file) => file.type.startsWith("image/"));
+    if (files.length === 0) {
       setError("请选择图片文件");
       return;
     }
 
     setError(null);
-    const loadId = loadIdRef.current + 1;
-    loadIdRef.current = loadId;
+    const start = nextSlotRef.current;
+    nextSlotRef.current += files.length;
+    files.forEach((file, index) => loadFile(file, start + index));
+  }
+
+  function loadFile(file: File, slot: number) {
     const url = URL.createObjectURL(file);
-    const previous = urlRef.current;
-    urlRef.current = url;
     const img = new Image();
     img.onload = () => {
-      if (loadIdRef.current !== loadId) {
+      if (!mountedRef.current) {
         URL.revokeObjectURL(url);
         return;
       }
       if (img.naturalWidth === 0 || img.naturalHeight === 0) {
         URL.revokeObjectURL(url);
-        if (urlRef.current === url) urlRef.current = previous;
         setError("无法读取这张图片");
         return;
       }
-      if (previous) URL.revokeObjectURL(previous);
       const count = sliceCountRef.current;
-      const dot = file.name.lastIndexOf(".");
-      const base = dot > 0 ? file.name.slice(0, dot) : file.name;
-      setImage(img);
-      setFileName(base || "clip");
-      setFrame(
-        containFrame(
-          img.naturalWidth,
-          img.naturalHeight,
-          TILE_WIDTH * count,
-          TILE_HEIGHT,
-        ),
+      const base = containFrame(
+        img.naturalWidth,
+        img.naturalHeight,
+        TILE_WIDTH * count,
+        TILE_HEIGHT,
       );
+      const offset = slot * PLACE_OFFSET;
+      const dot = file.name.lastIndexOf(".");
+      const name = (dot > 0 ? file.name.slice(0, dot) : file.name) || "clip";
+      const placed: PlacedImage = {
+        id: crypto.randomUUID(),
+        name,
+        url,
+        image: img,
+        frame: {
+          ...base,
+          x: base.x + offset,
+          y: base.y + offset,
+        },
+      };
+      setImages((current) => {
+        const next = [...current, placed];
+        imagesRef.current = next;
+        return next;
+      });
+      setSelectedId(placed.id);
     };
     img.onerror = () => {
-      if (loadIdRef.current !== loadId) {
-        URL.revokeObjectURL(url);
-        return;
-      }
       URL.revokeObjectURL(url);
-      if (urlRef.current === url) urlRef.current = previous;
+      if (!mountedRef.current) return;
       setError("无法读取这张图片");
     };
     img.src = url;
   }
 
   function handleExport() {
-    if (!image || !frame) return;
+    const first = images[0];
+    if (!first) return;
     setError(null);
     startExport(async () => {
       try {
         await exportSlices({
-          image,
-          frame,
+          images,
           sliceCount,
           background,
           radius,
-          fileName,
+          fileName: first.name,
         });
       } catch {
         setError("导出失败，请重试");
@@ -136,18 +162,19 @@ export function ClipEditor() {
       onDrop={(event) => {
         event.preventDefault();
         setDragOver(false);
-        const file = event.dataTransfer.files[0];
-        if (file) loadFile(file);
+        const fileList = event.dataTransfer.files;
+        if (fileList.length > 0) loadFiles(fileList);
       }}
     >
       <input
         ref={inputRef}
         type="file"
         accept="image/*"
+        multiple
         className="sr-only"
         onChange={(event) => {
-          const file = event.target.files?.[0];
-          if (file) loadFile(file);
+          const fileList = event.target.files;
+          if (fileList && fileList.length > 0) loadFiles(fileList);
           event.target.value = "";
         }}
       />
@@ -156,7 +183,7 @@ export function ClipEditor() {
           sliceCount={sliceCount}
           background={background}
           radius={radius}
-          hasImage={image !== null && frame !== null}
+          hasImage={images.length > 0}
           exporting={isExporting}
           error={error}
           onSliceCount={updateSliceCount}
@@ -171,10 +198,11 @@ export function ClipEditor() {
           sliceCount={sliceCount}
           background={background}
           radius={radius}
-          image={image}
-          frame={frame}
+          images={images}
+          selectedId={selectedId}
           dragOver={dragOver}
-          onFrameChange={setFrame}
+          onSelect={setSelectedId}
+          onFrameChange={updateFrame}
           onPick={openPicker}
         />
       </div>

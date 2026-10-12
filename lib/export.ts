@@ -1,10 +1,8 @@
 import { TILE_HEIGHT, TILE_WIDTH } from "@/lib/constants";
-import type { Frame } from "@/lib/frame";
-import { drawScene } from "@/lib/scene";
+import { drawScene, type PlacedImage } from "@/lib/scene";
 
 export async function exportSlices(options: {
-  image: CanvasImageSource;
-  frame: Frame;
+  images: PlacedImage[];
   sliceCount: number;
   background: string;
   radius: number;
@@ -23,8 +21,7 @@ export async function exportSlices(options: {
     sliceCount: options.sliceCount,
     background: options.background,
     radius: options.radius,
-    image: options.image,
-    frame: options.frame,
+    images: options.images,
   });
 
   const base = sanitizeBaseName(options.fileName);

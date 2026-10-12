@@ -10,7 +10,7 @@ import {
 import { TILE_HEIGHT, TILE_WIDTH } from "@/lib/constants";
 import type { Corner, Frame, Point } from "@/lib/frame";
 import { resizeFrame } from "@/lib/frame";
-import { clampedRadius, drawScene } from "@/lib/scene";
+import { clampedRadius, drawScene, type PlacedImage } from "@/lib/scene";
 
 const HANDLES: Array<{
   corner: Corner;
@@ -26,17 +26,18 @@ const HANDLES: Array<{
 ];
 
 type Drag =
-  | { kind: "move"; startPointer: Point; startFrame: Frame }
-  | { kind: "resize"; corner: Corner; startFrame: Frame };
+  | { kind: "move"; imageId: string; startPointer: Point; startFrame: Frame }
+  | { kind: "resize"; imageId: string; corner: Corner; startFrame: Frame };
 
 type StageProps = {
   sliceCount: number;
   background: string;
   radius: number;
-  image: HTMLImageElement | null;
-  frame: Frame | null;
+  images: PlacedImage[];
+  selectedId: string | null;
   dragOver: boolean;
-  onFrameChange: (frame: Frame) => void;
+  onSelect: (id: string | null) => void;
+  onFrameChange: (id: string, frame: Frame) => void;
   onPick: () => void;
 };
 
@@ -44,9 +45,10 @@ export function Stage({
   sliceCount,
   background,
   radius,
-  image,
-  frame,
+  images,
+  selectedId,
   dragOver,
+  onSelect,
   onFrameChange,
   onPick,
 }: StageProps) {
@@ -56,6 +58,7 @@ export function Stage({
   const dragRef = useRef<Drag | null>(null);
   const stopDragRef = useRef<(() => void) | null>(null);
   const [box, setBox] = useState({ w: 0, h: 0 });
+  const [cursor, setCursor] = useState<string | null>(null);
 
   const logicalW = TILE_WIDTH * sliceCount;
   const logicalH = TILE_HEIGHT;
@@ -105,8 +108,7 @@ export function Stage({
       sliceCount,
       background,
       radius,
-      image,
-      frame,
+      images,
     });
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -121,8 +123,7 @@ export function Stage({
     radius,
     fitted.viewH,
     fitted.viewW,
-    frame,
-    image,
+    images,
     logicalH,
     logicalW,
     sliceCount,
@@ -142,7 +143,7 @@ export function Stage({
     event.stopPropagation();
     stopDragRef.current?.();
     dragRef.current = drag;
-    document.body.style.cursor = cursor;
+    setCursor(cursor);
 
     const onMove = (moveEvent: PointerEvent) => {
       const current = dragRef.current;
@@ -150,7 +151,7 @@ export function Stage({
       if (!current || !pointer) return;
 
       if (current.kind === "move") {
-        onFrameChange({
+        onFrameChange(current.imageId, {
           ...current.startFrame,
           x: current.startFrame.x + pointer.x - current.startPointer.x,
           y: current.startFrame.y + pointer.y - current.startPointer.y,
@@ -158,12 +159,15 @@ export function Stage({
         return;
       }
 
-      onFrameChange(resizeFrame(current.startFrame, current.corner, pointer));
+      onFrameChange(
+        current.imageId,
+        resizeFrame(current.startFrame, current.corner, pointer),
+      );
     };
 
     const onUp = () => {
       dragRef.current = null;
-      document.body.style.cursor = "";
+      setCursor(null);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onUp);
@@ -184,55 +188,86 @@ export function Stage({
           className={`relative shadow-[0_4px_24px_-12px_rgba(0,0,0,0.06)] ${
             dragOver ? "" : ""
           }`}
-          style={{ width: fitted.viewW, height: fitted.viewH }}
+          style={{ width: fitted.viewW, height: fitted.viewH, cursor: cursor ?? undefined }}
+          onPointerDown={() => onSelect(null)}
         >
           <canvas ref={canvasRef} className="absolute inset-0 block h-full w-full" />
-          {image && frame ? (
-            <div
-              className="absolute"
-              style={{
-                left: `${(frame.x / logicalW) * 100}%`,
-                top: `${(frame.y / logicalH) * 100}%`,
-                width: `${(frame.width / logicalW) * 100}%`,
-                height: `${(frame.height / logicalH) * 100}%`,
-              }}
-            >
-              <div
-                aria-label="拖动图片"
-                className="absolute inset-0 cursor-grab touch-none"
-                onPointerDown={(event) => {
-                  const pointer = pointFromEvent(event);
-                  if (!pointer) return;
-                  startDrag(
-                    event,
-                    { kind: "move", startPointer: pointer, startFrame: frame },
-                    "grabbing",
-                  );
-                }}
-              />
-              <div
-                className="pointer-events-none absolute inset-0 shadow-[0_0_0_1px_rgba(0,0,0,0.75)] ring-1 ring-white"
-                style={{ borderRadius: frameBorderRadius(radius, frame) }}
-              />
-              {HANDLES.map((handle) => (
-                <button
-                  key={handle.corner}
-                  type="button"
-                  aria-label={`缩放${handle.label}`}
-                  className="absolute z-10 size-5 -translate-x-1/2 -translate-y-1/2 touch-none"
-                  style={{ left: handle.left, top: handle.top, cursor: handle.cursor }}
-                  onPointerDown={(event) => {
-                    startDrag(
-                      event,
-                      { kind: "resize", corner: handle.corner, startFrame: frame },
-                      handle.cursor,
-                    );
+          {images.length > 0 ? (
+            images.map((item, index) => {
+              const selected = item.id === selectedId;
+              return (
+                <div
+                  key={item.id}
+                  className="absolute"
+                  style={{
+                    zIndex: index + 1,
+                    left: `${(item.frame.x / logicalW) * 100}%`,
+                    top: `${(item.frame.y / logicalH) * 100}%`,
+                    width: `${(item.frame.width / logicalW) * 100}%`,
+                    height: `${(item.frame.height / logicalH) * 100}%`,
                   }}
                 >
-                  <span className="absolute inset-[3px] rounded-[2px] border border-black/80 bg-white" />
-                </button>
-              ))}
-            </div>
+                  <div
+                    aria-label="拖动图片"
+                    className="absolute inset-0 touch-none"
+                    style={{ cursor: selected && cursor ? cursor : "grab" }}
+                    onPointerDown={(event) => {
+                      const pointer = pointFromEvent(event);
+                      if (!pointer) return;
+                      onSelect(item.id);
+                      startDrag(
+                        event,
+                        {
+                          kind: "move",
+                          imageId: item.id,
+                          startPointer: pointer,
+                          startFrame: item.frame,
+                        },
+                        "grabbing",
+                      );
+                    }}
+                  />
+                  <div
+                    className={
+                      selected
+                        ? "pointer-events-none absolute inset-0 ring-1 ring-blue-500"
+                        : "pointer-events-none absolute inset-0"
+                    }
+                    style={{ borderRadius: frameBorderRadius(radius, item.frame) }}
+                  />
+                  {selected
+                    ? HANDLES.map((handle) => (
+                        <button
+                          key={handle.corner}
+                          type="button"
+                          aria-label={`缩放${handle.label}`}
+                          className="absolute z-10 size-3.5 -translate-x-1/2 -translate-y-1/2 touch-none"
+                          style={{
+                            left: handle.left,
+                            top: handle.top,
+                            cursor: handle.cursor,
+                          }}
+                          onPointerDown={(event) => {
+                            onSelect(item.id);
+                            startDrag(
+                              event,
+                              {
+                                kind: "resize",
+                                imageId: item.id,
+                                corner: handle.corner,
+                                startFrame: item.frame,
+                              },
+                              handle.cursor,
+                            );
+                          }}
+                        >
+                          <span className="absolute inset-[3px] rounded-[0px] border border-blue-500 bg-white" />
+                        </button>
+                      ))
+                    : null}
+                </div>
+              );
+            })
           ) : (
             <button
               type="button"

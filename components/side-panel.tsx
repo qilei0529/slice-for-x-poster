@@ -66,7 +66,7 @@ export function SidePanel({
       />
 
       <Button type="button" variant="outline" onClick={onPick}>
-        {hasImage ? "更换图片" : "选择图片"}
+        {hasImage ? "添加图片" : "选择图片"}
       </Button>
 
       <div className="flex flex-row justify-between items-center gap-stack-tight">
