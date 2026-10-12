@@ -1,9 +1,17 @@
 "use client";
 
-import { Dialog } from "@base-ui/react/dialog";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowRightIcon, XIcon } from "@/components/icons";
+import { ArrowRightIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
+import {
+  DialogBackdrop,
+  DialogContent,
+  DialogHead,
+  DialogPopup,
+  DialogPortal,
+  DialogRoot,
+  DialogViewport,
+} from "@/components/ui/dialog";
 import { TILE_HEIGHT, TILE_WIDTH } from "@/lib/constants";
 import { renderPreviewSlices, revokePreviewUrls } from "@/lib/preview";
 import type { PlacedImage } from "@/lib/scene";
@@ -76,7 +84,7 @@ export function PreviewDialog({
   }, []);
 
   return (
-    <Dialog.Root
+    <DialogRoot
       open={open}
       onOpenChange={onOpenChange}
       onOpenChangeComplete={(nextOpen) => {
@@ -87,74 +95,56 @@ export function PreviewDialog({
         setPhase("idle");
       }}
     >
-      <Dialog.Portal>
-        <Dialog.Backdrop
-          className={cn(
-            "fixed inset-0 z-50 bg-black/50 transition-opacity duration-150",
-            "data-ending-style:opacity-0 data-starting-style:opacity-0",
-          )}
-        />
-        <Dialog.Viewport className="fixed inset-0 z-50 flex overflow-y-auto overscroll-contain p-4">
-          <Dialog.Popup
-            className={cn(
-              "relative m-auto w-full min-w-0 max-w-[580px] rounded-2xl bg-white text-[#0f1419] shadow-xl outline-none",
-              "origin-center transition-[opacity,scale] duration-150",
-              "data-ending-style:scale-95 data-ending-style:opacity-0",
-              "data-starting-style:scale-95 data-starting-style:opacity-0",
-            )}
-          >
-            <Dialog.Title className="sr-only">Post preview</Dialog.Title>
-            <Dialog.Description className="sr-only">
-              Tiles arranged the way they appear in an X post.
-            </Dialog.Description>
-            <Dialog.Close
-              aria-label="Close"
-              className="absolute top-3 right-3 z-10 flex size-8 items-center justify-center rounded-full text-[#536471] hover:bg-black/5"
-            >
-              <XIcon className="size-3.5" />
-            </Dialog.Close>
+      <DialogPortal>
+        <DialogBackdrop />
+        <DialogViewport>
+          <DialogPopup className="min-w-0 max-w-[580px]">
+            <DialogHead
+              title="Preview"
+              description="Tiles arranged the way they appear in an X post."
+              showClose
+            />
+            <DialogContent maxHeight="680px">
+              <article className="text-[#0f1419]">
+                <header className="flex gap-3">
+                  <div
+                    aria-hidden
+                    className="size-10 shrink-0 rounded-full bg-[#cfd9de]"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-[15px] leading-5 font-bold">Elon Musk</p>
+                    <p className="text-[15px] leading-5 text-[#536471]">@x</p>
+                  </div>
+                </header>
 
-            <article className="px-6 pt-6 pb-6">
-              <header className="flex gap-3 pr-8">
-                <div
-                  aria-hidden
-                  className="size-10 shrink-0 rounded-full bg-[#cfd9de]"
-                />
-                <div className="min-w-0">
-                  <p className="text-[15px] leading-5 font-bold">Preview</p>
-                  <p className="text-[15px] leading-5 text-[#536471]">
-                    @x
-                  </p>
+                <div className="mt-3 pl-13">
+                  <div className="mb-1 h-4 w-48 bg-[#cfd9de]/50"></div>
+                  <div className="mb-4 h-4 w-64 bg-[#cfd9de]/50"></div>
+                  {phase === "loading" || phase === "idle" ? (
+                    <p className="py-16 text-center text-[15px] text-[#536471]">
+                      Preparing preview…
+                    </p>
+                  ) : null}
+                  {phase === "error" ? (
+                    <p className="py-16 text-center text-[15px] text-[#536471]">
+                      Couldn&apos;t build the preview.
+                    </p>
+                  ) : null}
+                  {phase === "ready" ? <MediaScroller urls={slices} /> : null}
                 </div>
-              </header>
 
-              <div className="mt-3 pl-13">
-                <div className="w-48 h-4 bg-[#cfd9de]/50 mb-1"></div>
-                <div className="w-64 h-4 bg-[#cfd9de]/50 mb-4"></div>
-                {phase === "loading" || phase === "idle" ? (
-                  <p className="py-16 text-center text-[15px] text-[#536471]">
-                    Preparing preview…
-                  </p>
-                ) : null}
-                {phase === "error" ? (
-                  <p className="py-16 text-center text-[15px] text-[#536471]">
-                    Couldn&apos;t build the preview.
-                  </p>
-                ) : null}
-                {phase === "ready" ? <MediaScroller urls={slices} /> : null}
-              </div>
-
-              <div className="mt-3 flex pl-13 items-center justify-between px-1 pb-1 text-[#536471]">
-                <ReplyIcon />
-                <RepostIcon />
-                <LikeIcon />
-                <ViewsIcon />
-              </div>
-            </article>
-          </Dialog.Popup>
-        </Dialog.Viewport>
-      </Dialog.Portal>
-    </Dialog.Root>
+                <div className="mt-3 flex items-center justify-between px-1 pb-1 pl-13 text-[#536471]">
+                  <ReplyIcon />
+                  <RepostIcon />
+                  <LikeIcon />
+                  <ViewsIcon />
+                </div>
+              </article>
+            </DialogContent>
+          </DialogPopup>
+        </DialogViewport>
+      </DialogPortal>
+    </DialogRoot>
   );
 }
 

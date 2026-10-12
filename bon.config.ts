@@ -10,7 +10,7 @@ export const bonConfig = {
     borderWidth: "sm",
   },
   panel: {
-    radius: "xl",
+    radius: "2xl",
   },
   spacing: {
     pageX: "6",
