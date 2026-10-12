@@ -37,6 +37,7 @@ type SidePanelProps = {
   onBackground: (color: string) => void;
   onRadius: (radius: number) => void;
   onPick: () => void;
+  onPreview: () => void;
   onExport: () => void;
 };
 
@@ -51,6 +52,7 @@ export function SidePanel({
   onBackground,
   onRadius,
   onPick,
+  onPreview,
   onExport,
 }: SidePanelProps) {
   const width = TILE_WIDTH * sliceCount;
@@ -162,6 +164,14 @@ export function SidePanel({
       {error ? <p className="text-caption text-destructive">{error}</p> : null}
 
       <PanelFoot>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={!hasImage}
+          onClick={onPreview}
+        >
+          Preview
+        </Button>
         <Button
           type="button"
           disabled={!hasImage || exporting}

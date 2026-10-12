@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { PreviewDialog } from "@/components/preview-dialog";
 import { SidePanel } from "@/components/side-panel";
 import { Stage } from "@/components/stage";
 import {
@@ -32,6 +33,7 @@ export function ClipEditor() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [isExporting, startExport] = useTransition();
 
   useEffect(() => {
@@ -190,9 +192,18 @@ export function ClipEditor() {
           onBackground={setBackground}
           onRadius={updateRadius}
           onPick={openPicker}
+          onPreview={() => setPreviewOpen(true)}
           onExport={handleExport}
         />
       </aside>
+      <PreviewDialog
+        open={previewOpen}
+        images={images}
+        sliceCount={sliceCount}
+        background={background}
+        radius={radius}
+        onOpenChange={setPreviewOpen}
+      />
       <div className="min-h-0 min-w-0 flex-1">
         <Stage
           sliceCount={sliceCount}
