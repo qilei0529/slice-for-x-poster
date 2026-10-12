@@ -10,7 +10,7 @@ import {
   DialogViewport,
 } from "@/components/ui/dialog";
 
-const WELCOME_KEY = "slice-for-x:welcome";
+const WELCOME_KEY = "SLICE_FOR_X:WELCOME";
 
 export function WelcomeDialog() {
   const [open, setOpen] = useState(false);
@@ -36,9 +36,9 @@ export function WelcomeDialog() {
               showClose
             />
             <img
-              src="/welcome.png"
+              src="https://pub-8028c1a0b1664149b66de14c14aee4ef.r2.dev/uploads/202610/88a4f93e-6be4-47b5-9d70-3546fb7c21e3.webp"
               alt=""
-              className="max-h-[min(420px,50vh)] w-full rounded-panel object-contain"
+              className="max-h-[min(520px,60vh)] w-full rounded-panel object-contain"
             />
           </DialogPopup>
         </DialogViewport>

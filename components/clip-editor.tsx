@@ -251,7 +251,7 @@ export function ClipEditor() {
         onOpenChange={setPreviewOpen}
       />
       <WelcomeDialog />
-      <div className="min-h-0 min-w-0 flex-1">
+      <div className="relative min-h-0 min-w-0 flex-1">
         <Stage
           sliceCount={sliceCount}
           background={background}
@@ -263,6 +263,11 @@ export function ClipEditor() {
           onFrameChange={updateFrame}
           onPick={openPicker}
         />
+        <p className="pointer-events-none absolute right-3 bottom-3 text-right text-caption text-muted-foreground">
+          author by x:qilei
+          <br />
+          design with bon-ui
+        </p>
       </div>
     </div>
   );
