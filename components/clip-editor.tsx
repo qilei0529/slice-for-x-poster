@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { Logo } from "@/components/logo";
 import { PreviewDialog } from "@/components/preview-dialog";
 import { WelcomeDialog } from "@/components/welcome-dialog";
 import { SidePanel } from "@/components/side-panel";
@@ -252,6 +253,9 @@ export function ClipEditor() {
       />
       <WelcomeDialog />
       <div className="relative min-h-0 min-w-0 flex-1">
+        <div className="pointer-events-none absolute inset-x-0 top-4 z-10 flex justify-center">
+          <Logo className="size-6" />
+        </div>
         <Stage
           sliceCount={sliceCount}
           background={background}
@@ -263,7 +267,7 @@ export function ClipEditor() {
           onFrameChange={updateFrame}
           onPick={openPicker}
         />
-        <div className=" absolute right-3 bottom-3 space-x-2 text-right text-xs text-muted-foreground">
+        <div className="absolute right-3 bottom-3 space-x-2 text-right text-xs text-muted-foreground">
 
           <span className="">
             DESIGN BY <a className="hover:underline text-body hover:text-foreground" href="https://x.com/qilei" target="_blank"> @qilei</a>
