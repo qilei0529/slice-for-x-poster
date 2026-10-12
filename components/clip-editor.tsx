@@ -263,11 +263,15 @@ export function ClipEditor() {
           onFrameChange={updateFrame}
           onPick={openPicker}
         />
-        <p className="pointer-events-none absolute right-3 bottom-3 text-right text-caption text-muted-foreground">
-          author by x:qilei
-          <br />
-          design with bon-ui
-        </p>
+        <div className=" absolute right-3 bottom-3 space-x-2 text-right text-xs text-muted-foreground">
+
+          <span className="">
+            DESIGN BY <a className="hover:underline text-body hover:text-foreground" href="https://x.com/qilei" target="_blank"> @qilei</a>
+          </span>
+          <span>
+            WITH <a href="https://bon-ui.com" className="hover:underline text-body hover:text-foreground" target="_blank"> bon-ui</a>
+          </span>
+        </div>
       </div>
     </div>
   );
