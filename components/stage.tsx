@@ -10,7 +10,7 @@ import {
 import { TILE_HEIGHT, TILE_WIDTH } from "@/lib/constants";
 import type { Corner, Frame, Point } from "@/lib/frame";
 import { resizeFrame } from "@/lib/frame";
-import { drawScene } from "@/lib/scene";
+import { clampedRadius, drawScene } from "@/lib/scene";
 
 const HANDLES: Array<{
   corner: Corner;
@@ -32,6 +32,7 @@ type Drag =
 type StageProps = {
   sliceCount: number;
   background: string;
+  radius: number;
   image: HTMLImageElement | null;
   frame: Frame | null;
   dragOver: boolean;
@@ -42,6 +43,7 @@ type StageProps = {
 export function Stage({
   sliceCount,
   background,
+  radius,
   image,
   frame,
   dragOver,
@@ -102,6 +104,7 @@ export function Stage({
     drawScene(ctx, {
       sliceCount,
       background,
+      radius,
       image,
       frame,
     });
@@ -115,6 +118,7 @@ export function Stage({
     });
   }, [
     background,
+    radius,
     fitted.viewH,
     fitted.viewW,
     frame,
@@ -206,7 +210,10 @@ export function Stage({
                   );
                 }}
               />
-              <div className="pointer-events-none absolute inset-0 shadow-[0_0_0_1px_rgba(0,0,0,0.75)] ring-1 ring-white" />
+              <div
+                className="pointer-events-none absolute inset-0 shadow-[0_0_0_1px_rgba(0,0,0,0.75)] ring-1 ring-white"
+                style={{ borderRadius: frameBorderRadius(radius, frame) }}
+              />
               {HANDLES.map((handle) => (
                 <button
                   key={handle.corner}
@@ -241,6 +248,12 @@ export function Stage({
       ) : null}
     </div>
   );
+}
+
+function frameBorderRadius(radius: number, frame: Frame) {
+  const curve = clampedRadius(radius, frame);
+  if (curve <= 0) return undefined;
+  return `${(curve / frame.width) * 100}% / ${(curve / frame.height) * 100}%`;
 }
 
 function fitCanvas(boxW: number, boxH: number, logicalW: number, logicalH: number) {

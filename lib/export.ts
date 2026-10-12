@@ -7,6 +7,7 @@ export async function exportSlices(options: {
   frame: Frame;
   sliceCount: number;
   background: string;
+  radius: number;
   fileName: string;
 }) {
   const { zip } = await import("fflate");
@@ -21,6 +22,7 @@ export async function exportSlices(options: {
   drawScene(ctx, {
     sliceCount: options.sliceCount,
     background: options.background,
+    radius: options.radius,
     image: options.image,
     frame: options.frame,
   });

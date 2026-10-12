@@ -4,4 +4,6 @@ export const MIN_SLICES = 1;
 export const MAX_SLICES = 4;
 export const DEFAULT_SLICES = 2;
 export const DEFAULT_BACKGROUND = "#000000";
+export const DEFAULT_RADIUS = 0;
+export const MAX_RADIUS = 480;
 export const MIN_FRAME_EDGE = 32;

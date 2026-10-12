@@ -5,7 +5,9 @@ import { SidePanel } from "@/components/side-panel";
 import { Stage } from "@/components/stage";
 import {
   DEFAULT_BACKGROUND,
+  DEFAULT_RADIUS,
   DEFAULT_SLICES,
+  MAX_RADIUS,
   MAX_SLICES,
   MIN_SLICES,
   TILE_HEIGHT,
@@ -21,6 +23,7 @@ export function ClipEditor() {
   const loadIdRef = useRef(0);
   const [sliceCount, setSliceCount] = useState(DEFAULT_SLICES);
   const [background, setBackground] = useState(DEFAULT_BACKGROUND);
+  const [radius, setRadius] = useState(DEFAULT_RADIUS);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [fileName, setFileName] = useState("clip");
   const [frame, setFrame] = useState<Frame | null>(null);
@@ -38,6 +41,10 @@ export function ClipEditor() {
     const next = Math.min(MAX_SLICES, Math.max(MIN_SLICES, count));
     sliceCountRef.current = next;
     setSliceCount(next);
+  }
+
+  function updateRadius(next: number) {
+    setRadius(Math.min(MAX_RADIUS, Math.max(0, next)));
   }
 
   function openPicker() {
@@ -105,6 +112,7 @@ export function ClipEditor() {
           frame,
           sliceCount,
           background,
+          radius,
           fileName,
         });
       } catch {
@@ -147,6 +155,7 @@ export function ClipEditor() {
         <Stage
           sliceCount={sliceCount}
           background={background}
+          radius={radius}
           image={image}
           frame={frame}
           dragOver={dragOver}
@@ -157,11 +166,13 @@ export function ClipEditor() {
       <SidePanel
         sliceCount={sliceCount}
         background={background}
+        radius={radius}
         hasImage={image !== null && frame !== null}
         exporting={isExporting}
         error={error}
         onSliceCount={updateSliceCount}
         onBackground={setBackground}
+        onRadius={updateRadius}
         onPick={openPicker}
         onExport={handleExport}
       />

@@ -1,15 +1,23 @@
 "use client";
 
-import { MAX_SLICES, MIN_SLICES, TILE_HEIGHT, TILE_WIDTH } from "@/lib/constants";
+import {
+  MAX_RADIUS,
+  MAX_SLICES,
+  MIN_SLICES,
+  TILE_HEIGHT,
+  TILE_WIDTH,
+} from "@/lib/constants";
 
 type SidePanelProps = {
   sliceCount: number;
   background: string;
+  radius: number;
   hasImage: boolean;
   exporting: boolean;
   error: string | null;
   onSliceCount: (count: number) => void;
   onBackground: (color: string) => void;
+  onRadius: (radius: number) => void;
   onPick: () => void;
   onExport: () => void;
 };
@@ -17,11 +25,13 @@ type SidePanelProps = {
 export function SidePanel({
   sliceCount,
   background,
+  radius,
   hasImage,
   exporting,
   error,
   onSliceCount,
   onBackground,
+  onRadius,
   onPick,
   onExport,
 }: SidePanelProps) {
@@ -77,6 +87,23 @@ export function SidePanel({
           {width} × {TILE_HEIGHT}
         </p>
       </div>
+
+      <label className="flex flex-col gap-2">
+        <span className="flex items-center justify-between text-xs text-white/50">
+          <span>圆角</span>
+          <span className="tabular-nums text-white/80">{radius} px</span>
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={MAX_RADIUS}
+          step={1}
+          value={radius}
+          aria-label="圆角"
+          onChange={(event) => onRadius(Number(event.target.value))}
+          className="h-1.5 w-full cursor-pointer accent-white"
+        />
+      </label>
 
       <label className="flex items-center justify-between gap-3">
         <span className="text-xs text-white/50">背景</span>
