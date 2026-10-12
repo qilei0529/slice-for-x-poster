@@ -22,8 +22,8 @@ function isSameColor(a: string, b: string) {
 
 const BACKGROUND_PRESETS = [
   { label: "黑色", value: "#000000" },
-  { label: "白色", value: "#ffffff" },
-  { label: "浅灰", value: "#f4f4f4" },
+  { label: "白色", value: "#f4f4f4" },
+  { label: "浅灰", value: "#e0e0e0" },
 ] as const;
 
 type SidePanelProps = {

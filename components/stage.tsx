@@ -181,8 +181,8 @@ export function Stage({
       {fitted.viewW > 0 ? (
         <div
           ref={stageRef}
-          className={`relative shadow-[0_24px_80px_rgba(0,0,0,0.12)] ${
-            dragOver ? "ring-2 ring-foreground" : "ring-1 ring-border"
+          className={`relative shadow-[0_4px_24px_-12px_rgba(0,0,0,0.06)] ${
+            dragOver ? "" : ""
           }`}
           style={{ width: fitted.viewW, height: fitted.viewH }}
         >
@@ -264,8 +264,8 @@ function fitCanvas(boxW: number, boxH: number, logicalW: number, logicalH: numbe
   }
   const scale = Math.min(availW / logicalW, availH / logicalH);
   return {
-    viewW: logicalW * scale,
-    viewH: logicalH * scale,
+    viewW: (logicalW - 400) * scale,
+    viewH: (logicalH - 400) * scale,
   };
 }
 
@@ -279,7 +279,7 @@ function drawGuides(
     ctx.save();
     ctx.strokeStyle = color;
     ctx.lineWidth = width;
-    ctx.setLineDash([7, 6]);
+    ctx.setLineDash([4, 4]);
     for (let index = 1; index < options.sliceCount; index += 1) {
       const x = Math.round(index * TILE_WIDTH * scaleX) + 0.5;
       ctx.beginPath();
@@ -290,20 +290,18 @@ function drawGuides(
     ctx.restore();
   };
 
-  stroke("rgba(0,0,0,0.55)", 3);
-  stroke("rgba(255,255,255,0.88)", 1);
+  stroke("rgba(0,0,0,0.3)", 2);
+  stroke("rgba(255,255,255,0.6)", 1);
 
   ctx.save();
-  ctx.font = "600 12px ui-sans-serif, system-ui, sans-serif";
+  ctx.font = "500 12px ui-sans-serif, system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.lineWidth = 3;
-  ctx.strokeStyle = "rgba(0,0,0,0.55)";
-  ctx.fillStyle = "white";
+  ctx.fillStyle = "rgba(0,0,0,0.55)";
   for (let index = 0; index < options.sliceCount; index += 1) {
     const x = (index + 0.5) * TILE_WIDTH * scaleX;
     const label = String(index + 1);
-    ctx.strokeText(label, x, 18);
     ctx.fillText(label, x, 18);
   }
   ctx.restore();
