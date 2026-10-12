@@ -24,7 +24,7 @@ export async function exportSlices(options: {
     images: options.images,
   });
 
-  const base = sanitizeBaseName(options.fileName);
+  const base = exportBaseName(options.fileName);
   const files: Record<string, Uint8Array> = {};
 
   for (let index = 0; index < options.sliceCount; index += 1) {
@@ -75,6 +75,14 @@ function canvasToPng(canvas: HTMLCanvasElement): Promise<Uint8Array> {
       );
     }, "image/png");
   });
+}
+
+function exportBaseName(fileName: string, date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const name = sanitizeBaseName(fileName).slice(0, 8);
+  return `${year}${month}${day}-${name}`;
 }
 
 function sanitizeBaseName(fileName: string) {

@@ -37,6 +37,7 @@ type SidePanelProps = {
   onBackground: (color: string) => void;
   onRadius: (radius: number) => void;
   onPick: () => void;
+  onNew: () => void;
   onPreview: () => void;
   onExport: () => void;
 };
@@ -52,6 +53,7 @@ export function SidePanel({
   onBackground,
   onRadius,
   onPick,
+  onNew,
   onPreview,
   onExport,
 }: SidePanelProps) {
@@ -65,7 +67,13 @@ export function SidePanel({
       <PanelHead
         title="Clip for X"
         description={`Each tile ${TILE_WIDTH} × ${TILE_HEIGHT}`}
-      />
+      >
+        {hasImage ? (
+          <Button type="button" variant="outline" size="sm" onClick={onNew}>
+            New
+          </Button>
+        ) : null}
+      </PanelHead>
 
       <Button type="button" variant="outline" onClick={onPick}>
         {hasImage ? "Add image" : "Choose image"}

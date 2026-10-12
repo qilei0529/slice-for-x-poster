@@ -64,6 +64,16 @@ export function ClipEditor() {
     });
   }
 
+  function clearImages() {
+    for (const item of imagesRef.current) URL.revokeObjectURL(item.url);
+    imagesRef.current = [];
+    nextSlotRef.current = 0;
+    setImages([]);
+    setSelectedId(null);
+    setPreviewOpen(false);
+    setError(null);
+  }
+
   function openPicker() {
     inputRef.current?.click();
   }
@@ -192,6 +202,7 @@ export function ClipEditor() {
           onBackground={setBackground}
           onRadius={updateRadius}
           onPick={openPicker}
+          onNew={clearImages}
           onPreview={() => setPreviewOpen(true)}
           onExport={handleExport}
         />
