@@ -21,9 +21,9 @@ function isSameColor(a: string, b: string) {
 }
 
 const BACKGROUND_PRESETS = [
-  { label: "黑色", value: "#000000" },
-  { label: "白色", value: "#f4f4f4" },
-  { label: "浅灰", value: "#e0e0e0" },
+  { label: "Black", value: "#000000" },
+  { label: "White", value: "#f4f4f4" },
+  { label: "Light gray", value: "#e0e0e0" },
 ] as const;
 
 type SidePanelProps = {
@@ -62,21 +62,21 @@ export function SidePanel({
     <Panel className="min-h-full">
       <PanelHead
         title="Clip for X"
-        description={`每张 ${TILE_WIDTH} × ${TILE_HEIGHT}`}
+        description={`Each tile ${TILE_WIDTH} × ${TILE_HEIGHT}`}
       />
 
       <Button type="button" variant="outline" onClick={onPick}>
-        {hasImage ? "添加图片" : "选择图片"}
+        {hasImage ? "Add image" : "Choose image"}
       </Button>
 
       <div className="flex flex-row justify-between items-center gap-stack-tight">
-        <span className="text-caption text-muted-foreground">张数</span>
-        <ButtonGroup aria-label="张数">
+        <span className="text-caption text-muted-foreground">Tiles</span>
+        <ButtonGroup aria-label="Tile count">
           <Button
             type="button"
             variant="outline"
             size="sm"
-            aria-label="减少张数"
+            aria-label="Fewer tiles"
             disabled={sliceCount <= MIN_SLICES}
             onClick={() => onSliceCount(sliceCount - 1)}
           >
@@ -89,7 +89,7 @@ export function SidePanel({
             type="button"
             variant="outline"
             size="sm"
-            aria-label="增加张数"
+            aria-label="More tiles"
             disabled={sliceCount >= MAX_SLICES}
             onClick={() => onSliceCount(sliceCount + 1)}
           >
@@ -99,21 +99,21 @@ export function SidePanel({
       </div>
 
       <div className="flex flex-row justify-between items-center gap-stack-tight">
-        <p className="text-caption text-muted-foreground">尺寸</p>
+        <p className="text-caption text-muted-foreground">Size</p>
         <p className="text-body text-foreground tabular-nums">
           {width} × {TILE_HEIGHT}
         </p>
       </div>
 
       <label className="flex items-center justify-between gap-inline">
-        <span className="text-caption text-muted-foreground">圆角</span>
+        <span className="text-caption text-muted-foreground">Radius</span>
         <Input
           type="number"
           min={0}
           max={MAX_RADIUS}
           step={1}
           value={radius}
-          aria-label="圆角"
+          aria-label="Corner radius"
           onValueChange={(value) => {
             const next = Number(value);
             onRadius(Number.isNaN(next) ? 0 : next);
@@ -123,7 +123,7 @@ export function SidePanel({
       </label>
 
       <div className="flex items-center justify-between gap-inline">
-        <span className="text-caption text-muted-foreground">背景</span>
+        <span className="text-caption text-muted-foreground">Background</span>
         <div className="flex items-center gap-inline">
           {BACKGROUND_PRESETS.map((preset) => {
             const selected = isSameColor(background, preset.value);
@@ -151,7 +151,7 @@ export function SidePanel({
             <input
               type="color"
               value={background}
-              aria-label="自定义颜色"
+              aria-label="Custom color"
               onChange={(event) => onBackground(event.target.value)}
               className="absolute -inset-1 size-8 -mt-0.5 cursor-pointer border-0 bg-transparent p-0"
             />
@@ -167,7 +167,7 @@ export function SidePanel({
           disabled={!hasImage || exporting}
           onClick={onExport}
         >
-          {exporting ? "导出中…" : "导出 PNG"}
+          {exporting ? "Exporting…" : "Export PNG"}
         </Button>
       </PanelFoot>
     </Panel>

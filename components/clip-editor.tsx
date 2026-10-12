@@ -69,7 +69,7 @@ export function ClipEditor() {
   function loadFiles(fileList: FileList | File[]) {
     const files = [...fileList].filter((file) => file.type.startsWith("image/"));
     if (files.length === 0) {
-      setError("请选择图片文件");
+      setError("Choose an image file");
       return;
     }
 
@@ -89,7 +89,7 @@ export function ClipEditor() {
       }
       if (img.naturalWidth === 0 || img.naturalHeight === 0) {
         URL.revokeObjectURL(url);
-        setError("无法读取这张图片");
+        setError("Couldn't read this image");
         return;
       }
       const count = sliceCountRef.current;
@@ -123,7 +123,7 @@ export function ClipEditor() {
     img.onerror = () => {
       URL.revokeObjectURL(url);
       if (!mountedRef.current) return;
-      setError("无法读取这张图片");
+      setError("Couldn't read this image");
     };
     img.src = url;
   }
@@ -142,7 +142,7 @@ export function ClipEditor() {
           fileName: first.name,
         });
       } catch {
-        setError("导出失败，请重试");
+        setError("Export failed. Try again.");
       }
     });
   }

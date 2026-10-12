@@ -19,10 +19,10 @@ const HANDLES: Array<{
   cursor: string;
   label: string;
 }> = [
-  { corner: "nw", left: "0%", top: "0%", cursor: "nwse-resize", label: "左上角" },
-  { corner: "ne", left: "100%", top: "0%", cursor: "nesw-resize", label: "右上角" },
-  { corner: "sw", left: "0%", top: "100%", cursor: "nesw-resize", label: "左下角" },
-  { corner: "se", left: "100%", top: "100%", cursor: "nwse-resize", label: "右下角" },
+  { corner: "nw", left: "0%", top: "0%", cursor: "nwse-resize", label: "top left" },
+  { corner: "ne", left: "100%", top: "0%", cursor: "nesw-resize", label: "top right" },
+  { corner: "sw", left: "0%", top: "100%", cursor: "nesw-resize", label: "bottom left" },
+  { corner: "se", left: "100%", top: "100%", cursor: "nwse-resize", label: "bottom right" },
 ];
 
 type Drag =
@@ -208,7 +208,7 @@ export function Stage({
                   }}
                 >
                   <div
-                    aria-label="拖动图片"
+                    aria-label="Drag image"
                     className="absolute inset-0 touch-none"
                     style={{ cursor: selected && cursor ? cursor : "grab" }}
                     onPointerDown={(event) => {
@@ -240,7 +240,7 @@ export function Stage({
                         <button
                           key={handle.corner}
                           type="button"
-                          aria-label={`缩放${handle.label}`}
+                          aria-label={`Resize ${handle.label}`}
                           className="absolute z-10 size-3.5 -translate-x-1/2 -translate-y-1/2 touch-none"
                           style={{
                             left: handle.left,
@@ -275,7 +275,7 @@ export function Stage({
               className="absolute inset-0 flex items-center justify-center"
             >
               <span className="rounded-full bg-black/50 px-4 py-2 text-sm text-white backdrop-blur-sm">
-                拖入图片，或点击选择
+                Drop an image, or click to choose
               </span>
             </button>
           )}
