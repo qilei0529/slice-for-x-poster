@@ -291,16 +291,18 @@ function frameBorderRadius(radius: number, frame: Frame) {
   return `${(curve / frame.width) * 100}% / ${(curve / frame.height) * 100}%`;
 }
 
+const CANVAS_INSET = 100;
+
 function fitCanvas(boxW: number, boxH: number, logicalW: number, logicalH: number) {
-  const availW = Math.max(0, boxW - 16);
-  const availH = Math.max(0, boxH - 16);
+  const availW = Math.max(0, boxW - CANVAS_INSET * 2);
+  const availH = Math.max(0, boxH - CANVAS_INSET * 2);
   if (availW === 0 || availH === 0) {
     return { viewW: 0, viewH: 0 };
   }
   const scale = Math.min(availW / logicalW, availH / logicalH);
   return {
-    viewW: (logicalW - 400) * scale,
-    viewH: (logicalH - 400) * scale,
+    viewW: logicalW * scale,
+    viewH: logicalH * scale,
   };
 }
 
