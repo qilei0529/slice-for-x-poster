@@ -65,6 +65,40 @@ export function ClipEditor() {
     });
   }
 
+  function removeSelected() {
+    const id = selectedId;
+    if (!id) return;
+    const item = imagesRef.current.find((image) => image.id === id);
+    if (!item) return;
+    URL.revokeObjectURL(item.url);
+    const next = imagesRef.current.filter((image) => image.id !== id);
+    imagesRef.current = next;
+    setImages(next);
+    setSelectedId(null);
+  }
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Delete" && event.key !== "Backspace") return;
+      const target = event.target;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
+        (target instanceof HTMLElement &&
+          (target.isContentEditable || target.closest("[role='dialog']")))
+      ) {
+        return;
+      }
+      if (!selectedId) return;
+      event.preventDefault();
+      removeSelected();
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedId]);
+
   function clearImages() {
     for (const item of imagesRef.current) URL.revokeObjectURL(item.url);
     imagesRef.current = [];
@@ -162,7 +196,7 @@ export function ClipEditor() {
 
   return (
     <div
-      className="flex h-dvh overflow-hidden bg-background text-foreground select-none"
+      className="flex flex-col-reverse md:flex-row h-dvh overflow-hidden bg-background text-foreground select-none"
       onDragOver={(event) => {
         event.preventDefault();
         setDragOver(true);
@@ -191,7 +225,7 @@ export function ClipEditor() {
           event.target.value = "";
         }}
       />
-      <aside className="w-72 p-2 pl-4">
+      <aside className="md:w-72 p-2 pl-4">
         <SidePanel
           sliceCount={sliceCount}
           background={background}
@@ -208,7 +242,6 @@ export function ClipEditor() {
           onExport={handleExport}
         />
       </aside>
-      <WelcomeDialog />
       <PreviewDialog
         open={previewOpen}
         images={images}
@@ -217,6 +250,7 @@ export function ClipEditor() {
         radius={radius}
         onOpenChange={setPreviewOpen}
       />
+      <WelcomeDialog />
       <div className="min-h-0 min-w-0 flex-1">
         <Stage
           sliceCount={sliceCount}
