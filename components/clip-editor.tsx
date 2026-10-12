@@ -151,7 +151,7 @@ export function ClipEditor() {
           event.target.value = "";
         }}
       />
-      <aside className="flex h-full w-72 shrink-0 flex-col overflow-auto border-r border-border bg-background">
+      <aside className="w-72 p-2 pl-4">
         <SidePanel
           sliceCount={sliceCount}
           background={background}
@@ -166,7 +166,7 @@ export function ClipEditor() {
           onExport={handleExport}
         />
       </aside>
-      <div className="min-h-0 min-w-0 flex-1 bg-muted">
+      <div className="min-h-0 min-w-0 flex-1">
         <Stage
           sliceCount={sliceCount}
           background={background}

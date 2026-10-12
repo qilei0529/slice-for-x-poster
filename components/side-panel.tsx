@@ -3,15 +3,7 @@
 import { Panel, PanelFoot, PanelHead } from "@/components/element/panel";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
-import {
-  SliderControl,
-  SliderIndicator,
-  SliderLabel,
-  SliderRoot,
-  SliderThumb,
-  SliderTrack,
-  SliderValue,
-} from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
 import {
   MAX_RADIUS,
   MAX_SLICES,
@@ -19,6 +11,20 @@ import {
   TILE_HEIGHT,
   TILE_WIDTH,
 } from "@/lib/constants";
+import { cn } from "@/lib/cn";
+
+const selectedSwatchClass =
+  "ring-2 ring-foreground ring-offset-2 ring-offset-background";
+
+function isSameColor(a: string, b: string) {
+  return a.trim().toLowerCase() === b.trim().toLowerCase();
+}
+
+const BACKGROUND_PRESETS = [
+  { label: "黑色", value: "#000000" },
+  { label: "白色", value: "#ffffff" },
+  { label: "浅灰", value: "#f4f4f4" },
+] as const;
 
 type SidePanelProps = {
   sliceCount: number;
@@ -48,9 +54,12 @@ export function SidePanel({
   onExport,
 }: SidePanelProps) {
   const width = TILE_WIDTH * sliceCount;
+  const customSelected = !BACKGROUND_PRESETS.some((preset) =>
+    isSameColor(background, preset.value),
+  );
 
   return (
-    <Panel className="min-h-full rounded-none border-0">
+    <Panel className="min-h-full">
       <PanelHead
         title="Clip for X"
         description={`每张 ${TILE_WIDTH} × ${TILE_HEIGHT}`}
@@ -60,7 +69,7 @@ export function SidePanel({
         {hasImage ? "更换图片" : "选择图片"}
       </Button>
 
-      <div className="flex flex-col gap-stack-tight">
+      <div className="flex flex-row justify-between items-center gap-stack-tight">
         <span className="text-caption text-muted-foreground">张数</span>
         <ButtonGroup aria-label="张数">
           <Button
@@ -89,46 +98,66 @@ export function SidePanel({
         </ButtonGroup>
       </div>
 
-      <div className="flex flex-col gap-stack-tight">
+      <div className="flex flex-row justify-between items-center gap-stack-tight">
         <p className="text-caption text-muted-foreground">尺寸</p>
         <p className="text-body text-foreground tabular-nums">
           {width} × {TILE_HEIGHT}
         </p>
       </div>
 
-      <SliderRoot
-        min={0}
-        max={MAX_RADIUS}
-        step={1}
-        value={radius}
-        onValueChange={(value) => {
-          onRadius(typeof value === "number" ? value : (value[0] ?? 0));
-        }}
-      >
-        <div className="flex items-center justify-between gap-inline">
-          <SliderLabel>圆角</SliderLabel>
-          <SliderValue />
-        </div>
-        <SliderControl>
-          <SliderTrack size="sm">
-            <SliderIndicator size="sm" />
-            <SliderThumb size="sm" />
-          </SliderTrack>
-        </SliderControl>
-      </SliderRoot>
-
       <label className="flex items-center justify-between gap-inline">
-        <span className="text-caption text-muted-foreground">背景</span>
-        <span className="relative size-8 overflow-hidden rounded-control border border-border">
-          <input
-            type="color"
-            value={background}
-            aria-label="背景色"
-            onChange={(event) => onBackground(event.target.value)}
-            className="absolute -inset-1 size-12 cursor-pointer border-0 bg-transparent p-0"
-          />
-        </span>
+        <span className="text-caption text-muted-foreground">圆角</span>
+        <Input
+          type="number"
+          min={0}
+          max={MAX_RADIUS}
+          step={1}
+          value={radius}
+          aria-label="圆角"
+          onValueChange={(value) => {
+            const next = Number(value);
+            onRadius(Number.isNaN(next) ? 0 : next);
+          }}
+          className="w-12 tabular-nums"
+        />
       </label>
+
+      <div className="flex items-center justify-between gap-inline">
+        <span className="text-caption text-muted-foreground">背景</span>
+        <div className="flex items-center gap-inline">
+          {BACKGROUND_PRESETS.map((preset) => {
+            const selected = isSameColor(background, preset.value);
+            return (
+              <button
+                key={preset.value}
+                type="button"
+                aria-label={preset.label}
+                aria-pressed={selected}
+                onClick={() => onBackground(preset.value)}
+                className={cn(
+                  "size-5 rounded-control ring-2 ring-foreground/20 hover:ring-foreground/50",
+                  selected && selectedSwatchClass,
+                )}
+                style={{ backgroundColor: preset.value }}
+              />
+            );
+          })}
+          <span
+            className={cn(
+              "relative size-5 overflow-hidden rounded-control",
+              customSelected && selectedSwatchClass,
+            )}
+          >
+            <input
+              type="color"
+              value={background}
+              aria-label="自定义颜色"
+              onChange={(event) => onBackground(event.target.value)}
+              className="absolute -inset-1 size-8 -mt-0.5 cursor-pointer border-0 bg-transparent p-0"
+            />
+          </span>
+        </div>
+      </div>
 
       {error ? <p className="text-caption text-destructive">{error}</p> : null}
 
