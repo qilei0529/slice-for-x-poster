@@ -1,4 +1,4 @@
-export const TILE_WIDTH = 1648;
+export const TILE_WIDTH = 1646;
 export const TILE_HEIGHT = 2048;
 export const MIN_SLICES = 1;
 export const MAX_SLICES = 4;
