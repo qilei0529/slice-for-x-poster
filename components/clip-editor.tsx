@@ -113,7 +113,7 @@ export function ClipEditor() {
       );
       const offset = slot * PLACE_OFFSET;
       const dot = file.name.lastIndexOf(".");
-      const name = (dot > 0 ? file.name.slice(0, dot) : file.name) || "clip";
+      const name = (dot > 0 ? file.name.slice(0, dot) : file.name) || "slice";
       const placed: PlacedImage = {
         id: crypto.randomUUID(),
         name,

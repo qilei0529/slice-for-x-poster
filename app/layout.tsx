@@ -12,8 +12,8 @@ import {
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Clip Image for X",
-  description: "Clip images for X",
+  title: "Slice for X",
+  description: "Slice one picture into portrait tiles for X.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

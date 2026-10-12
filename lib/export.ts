@@ -87,7 +87,7 @@ function exportBaseName(fileName: string, date = new Date()) {
 
 function sanitizeBaseName(fileName: string) {
   const cleaned = fileName.replace(/[\\/:*?"<>|]+/g, "").trim();
-  return cleaned || "clip";
+  return cleaned || "slice";
 }
 
 function downloadBytes(data: Uint8Array, filename: string) {

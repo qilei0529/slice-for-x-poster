@@ -65,7 +65,7 @@ export function SidePanel({
   return (
     <Panel className="min-h-full">
       <PanelHead
-        title="Clip for X"
+        title="Slice for X"
         description={`Each tile ${TILE_WIDTH} × ${TILE_HEIGHT}`}
       >
         {hasImage ? (
