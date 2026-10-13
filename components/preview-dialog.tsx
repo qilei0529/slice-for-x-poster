@@ -12,21 +12,22 @@ import {
   DialogRoot,
   DialogViewport,
 } from "@/components/ui/dialog";
-import { TILE_HEIGHT, TILE_WIDTH } from "@/lib/constants";
 import { renderPreviewSlices, revokePreviewUrls } from "@/lib/preview";
 import type { PlacedImage } from "@/lib/scene";
 
 const MEDIA_HEIGHT = 350;
 const MEDIA_GAP = 8;
 
-function tileWidth(height: number) {
-  return height * (TILE_WIDTH / TILE_HEIGHT);
+function tileDisplayWidth(height: number, tileWidth: number, tileHeight: number) {
+  return height * (tileWidth / tileHeight);
 }
 
 type PreviewDialogProps = {
   open: boolean;
   images: PlacedImage[];
   sliceCount: number;
+  tileWidth: number;
+  tileHeight: number;
   background: string;
   radius: number;
   onOpenChange: (open: boolean) => void;
@@ -36,6 +37,8 @@ export function PreviewDialog({
   open,
   images,
   sliceCount,
+  tileWidth,
+  tileHeight,
   background,
   radius,
   onOpenChange,
@@ -55,7 +58,14 @@ export function PreviewDialog({
     setPhase("loading");
     setSlices([]);
 
-    renderPreviewSlices({ images, sliceCount, background, radius })
+    renderPreviewSlices({
+      images,
+      sliceCount,
+      tileWidth,
+      tileHeight,
+      background,
+      radius,
+    })
       .then((urls) => {
         if (cancelled) {
           revokePreviewUrls(urls);
@@ -73,7 +83,7 @@ export function PreviewDialog({
     return () => {
       cancelled = true;
     };
-  }, [open, images, sliceCount, background, radius]);
+  }, [open, images, sliceCount, tileWidth, tileHeight, background, radius]);
 
   useEffect(() => {
     const owned = ownedUrls;
@@ -130,7 +140,13 @@ export function PreviewDialog({
                       Couldn&apos;t build the preview.
                     </p>
                   ) : null}
-                  {phase === "ready" ? <MediaScroller urls={slices} /> : null}
+                  {phase === "ready" ? (
+                    <MediaScroller
+                      urls={slices}
+                      tileWidth={tileWidth}
+                      tileHeight={tileHeight}
+                    />
+                  ) : null}
                 </div>
 
                 <div className="mt-3 flex items-center justify-between px-1 pb-1 pl-13 text-[#536471]">
@@ -148,7 +164,15 @@ export function PreviewDialog({
   );
 }
 
-function MediaScroller({ urls }: { urls: string[] }) {
+function MediaScroller({
+  urls,
+  tileWidth,
+  tileHeight,
+}: {
+  urls: string[];
+  tileWidth: number;
+  tileHeight: number;
+}) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -182,7 +206,7 @@ function MediaScroller({ urls }: { urls: string[] }) {
         ref={scrollerRef}
         className="h-[350px] max-w-full overflow-x-auto overflow-y-hidden"
       >
-        <MediaGrid urls={urls} />
+        <MediaGrid urls={urls} tileWidth={tileWidth} tileHeight={tileHeight} />
       </div>
       {canScrollLeft ? (
         <button
@@ -216,19 +240,27 @@ function scrollMedia(scroller: HTMLDivElement | null, direction: -1 | 1) {
   });
 }
 
-function MediaGrid({ urls }: { urls: string[] }) {
+function MediaGrid({
+  urls,
+  tileWidth,
+  tileHeight,
+}: {
+  urls: string[];
+  tileWidth: number;
+  tileHeight: number;
+}) {
+  const columnWidth = tileDisplayWidth(MEDIA_HEIGHT, tileWidth, tileHeight);
   if (urls.length === 1) {
     return (
       <div
         className="overflow-hidden rounded-2xl"
-        style={{ width: tileWidth(MEDIA_HEIGHT), height: MEDIA_HEIGHT }}
+        style={{ width: columnWidth, height: MEDIA_HEIGHT }}
       >
         <TileImage url={urls[0]} index={0} />
       </div>
     );
   }
 
-  const columnWidth = tileWidth(MEDIA_HEIGHT);
   return (
     <div
       className="grid gap-[8px] overflow-hidden rounded-2xl"

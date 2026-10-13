@@ -1,4 +1,3 @@
-import { TILE_HEIGHT, TILE_WIDTH } from "@/lib/constants";
 import type { Frame } from "@/lib/frame";
 
 export type PlacedImage = {
@@ -17,16 +16,18 @@ export function drawScene(
   ctx: CanvasRenderingContext2D,
   options: {
     sliceCount: number;
+    tileWidth: number;
+    tileHeight: number;
     background: string;
     radius: number;
     images: Array<Pick<PlacedImage, "image" | "frame">>;
   },
 ) {
-  const width = TILE_WIDTH * options.sliceCount;
+  const width = options.tileWidth * options.sliceCount;
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
   ctx.fillStyle = options.background;
-  ctx.fillRect(0, 0, width, TILE_HEIGHT);
+  ctx.fillRect(0, 0, width, options.tileHeight);
 
   for (const item of options.images) {
     const { frame } = item;

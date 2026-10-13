@@ -7,7 +7,6 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { TILE_HEIGHT, TILE_WIDTH } from "@/lib/constants";
 import type { Corner, Frame, Point } from "@/lib/frame";
 import { resizeFrame } from "@/lib/frame";
 import { clampedRadius, drawScene, type PlacedImage } from "@/lib/scene";
@@ -31,6 +30,8 @@ type Drag =
 
 type StageProps = {
   sliceCount: number;
+  tileWidth: number;
+  tileHeight: number;
   background: string;
   radius: number;
   images: PlacedImage[];
@@ -43,6 +44,8 @@ type StageProps = {
 
 export function Stage({
   sliceCount,
+  tileWidth,
+  tileHeight,
   background,
   radius,
   images,
@@ -60,8 +63,8 @@ export function Stage({
   const [box, setBox] = useState({ w: 0, h: 0 });
   const [cursor, setCursor] = useState<string | null>(null);
 
-  const logicalW = TILE_WIDTH * sliceCount;
-  const logicalH = TILE_HEIGHT;
+  const logicalW = tileWidth * sliceCount;
+  const logicalH = tileHeight;
   const fitted = fitCanvas(box.w, box.h, logicalW, logicalH);
 
   useLayoutEffect(() => {
@@ -106,6 +109,8 @@ export function Stage({
     );
     drawScene(ctx, {
       sliceCount,
+      tileWidth,
+      tileHeight,
       background,
       radius,
       images,
@@ -114,6 +119,7 @@ export function Stage({
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     drawGuides(ctx, {
       sliceCount,
+      tileWidth,
       viewW: fitted.viewW,
       viewH: fitted.viewH,
       logicalW,
@@ -127,6 +133,8 @@ export function Stage({
     logicalH,
     logicalW,
     sliceCount,
+    tileWidth,
+    tileHeight,
   ]);
 
   function pointFromEvent(event: { clientX: number; clientY: number }): Point | null {
@@ -308,7 +316,13 @@ function fitCanvas(boxW: number, boxH: number, logicalW: number, logicalH: numbe
 
 function drawGuides(
   ctx: CanvasRenderingContext2D,
-  options: { sliceCount: number; viewW: number; viewH: number; logicalW: number },
+  options: {
+    sliceCount: number;
+    tileWidth: number;
+    viewW: number;
+    viewH: number;
+    logicalW: number;
+  },
 ) {
   const scaleX = options.viewW / options.logicalW;
 
@@ -318,7 +332,7 @@ function drawGuides(
     ctx.lineWidth = width;
     ctx.setLineDash([4, 4]);
     for (let index = 1; index < options.sliceCount; index += 1) {
-      const x = Math.round(index * TILE_WIDTH * scaleX) + 0.5;
+      const x = Math.round(index * options.tileWidth * scaleX) + 0.5;
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, options.viewH);
@@ -337,7 +351,7 @@ function drawGuides(
   ctx.lineWidth = 3;
   ctx.fillStyle = "rgba(0,0,0,0.55)";
   for (let index = 0; index < options.sliceCount; index += 1) {
-    const x = (index + 0.5) * TILE_WIDTH * scaleX;
+    const x = (index + 0.5) * options.tileWidth * scaleX;
     const label = String(index + 1);
     ctx.fillText(label, x, 18);
   }

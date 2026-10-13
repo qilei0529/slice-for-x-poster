@@ -10,11 +10,12 @@ import {
   DEFAULT_BACKGROUND,
   DEFAULT_RADIUS,
   DEFAULT_SLICES,
+  DEFAULT_TILE_HEIGHT,
+  DEFAULT_TILE_WIDTH,
   MAX_RADIUS,
   MAX_SLICES,
   MIN_SLICES,
-  TILE_HEIGHT,
-  TILE_WIDTH,
+  clampTileEdge,
 } from "@/lib/constants";
 import { exportSlices } from "@/lib/export";
 import { containFrame, type Frame } from "@/lib/frame";
@@ -28,7 +29,11 @@ export function ClipEditor() {
   const nextSlotRef = useRef(0);
   const mountedRef = useRef(true);
   const sliceCountRef = useRef(DEFAULT_SLICES);
+  const tileWidthRef = useRef(DEFAULT_TILE_WIDTH);
+  const tileHeightRef = useRef(DEFAULT_TILE_HEIGHT);
   const [sliceCount, setSliceCount] = useState(DEFAULT_SLICES);
+  const [tileWidth, setTileWidth] = useState(DEFAULT_TILE_WIDTH);
+  const [tileHeight, setTileHeight] = useState(DEFAULT_TILE_HEIGHT);
   const [background, setBackground] = useState(DEFAULT_BACKGROUND);
   const [radius, setRadius] = useState(DEFAULT_RADIUS);
   const [images, setImages] = useState<PlacedImage[]>([]);
@@ -50,6 +55,18 @@ export function ClipEditor() {
     const next = Math.min(MAX_SLICES, Math.max(MIN_SLICES, count));
     sliceCountRef.current = next;
     setSliceCount(next);
+  }
+
+  function updateTileWidth(width: number) {
+    const next = clampTileEdge(width);
+    tileWidthRef.current = next;
+    setTileWidth(next);
+  }
+
+  function updateTileHeight(height: number) {
+    const next = clampTileEdge(height);
+    tileHeightRef.current = next;
+    setTileHeight(next);
   }
 
   function updateRadius(next: number) {
@@ -144,8 +161,8 @@ export function ClipEditor() {
       const base = containFrame(
         img.naturalWidth,
         img.naturalHeight,
-        TILE_WIDTH * count,
-        TILE_HEIGHT,
+        tileWidthRef.current * count,
+        tileHeightRef.current,
       );
       const offset = slot * PLACE_OFFSET;
       const dot = file.name.lastIndexOf(".");
@@ -185,6 +202,8 @@ export function ClipEditor() {
         await exportSlices({
           images,
           sliceCount,
+          tileWidth,
+          tileHeight,
           background,
           radius,
           fileName: first.name,
@@ -226,15 +245,19 @@ export function ClipEditor() {
           event.target.value = "";
         }}
       />
-      <aside className="md:w-72 p-2 pl-4">
+      <aside className="md:w-72 p-4">
         <SidePanel
           sliceCount={sliceCount}
+          tileWidth={tileWidth}
+          tileHeight={tileHeight}
           background={background}
           radius={radius}
           hasImage={images.length > 0}
           exporting={isExporting}
           error={error}
           onSliceCount={updateSliceCount}
+          onTileWidth={updateTileWidth}
+          onTileHeight={updateTileHeight}
           onBackground={setBackground}
           onRadius={updateRadius}
           onPick={openPicker}
@@ -247,6 +270,8 @@ export function ClipEditor() {
         open={previewOpen}
         images={images}
         sliceCount={sliceCount}
+        tileWidth={tileWidth}
+        tileHeight={tileHeight}
         background={background}
         radius={radius}
         onOpenChange={setPreviewOpen}
@@ -258,6 +283,8 @@ export function ClipEditor() {
         </div>
         <Stage
           sliceCount={sliceCount}
+          tileWidth={tileWidth}
+          tileHeight={tileHeight}
           background={background}
           radius={radius}
           images={images}

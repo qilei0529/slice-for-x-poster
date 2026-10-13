@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { Panel, PanelFoot, PanelHead } from "@/components/element/panel";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -7,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import {
   MAX_RADIUS,
   MAX_SLICES,
+  MAX_TILE_EDGE,
   MIN_SLICES,
-  TILE_HEIGHT,
-  TILE_WIDTH,
+  MIN_TILE_EDGE,
+  clampTileEdge,
 } from "@/lib/constants";
 import { cn } from "@/lib/cn";
 
@@ -28,12 +30,16 @@ const BACKGROUND_PRESETS = [
 
 type SidePanelProps = {
   sliceCount: number;
+  tileWidth: number;
+  tileHeight: number;
   background: string;
   radius: number;
   hasImage: boolean;
   exporting: boolean;
   error: string | null;
   onSliceCount: (count: number) => void;
+  onTileWidth: (width: number) => void;
+  onTileHeight: (height: number) => void;
   onBackground: (color: string) => void;
   onRadius: (radius: number) => void;
   onPick: () => void;
@@ -44,12 +50,16 @@ type SidePanelProps = {
 
 export function SidePanel({
   sliceCount,
+  tileWidth,
+  tileHeight,
   background,
   radius,
   hasImage,
   exporting,
   error,
   onSliceCount,
+  onTileWidth,
+  onTileHeight,
   onBackground,
   onRadius,
   onPick,
@@ -57,7 +67,7 @@ export function SidePanel({
   onPreview,
   onExport,
 }: SidePanelProps) {
-  const width = TILE_WIDTH * sliceCount;
+  const width = tileWidth * sliceCount;
   const customSelected = !BACKGROUND_PRESETS.some((preset) =>
     isSameColor(background, preset.value),
   );
@@ -66,7 +76,7 @@ export function SidePanel({
     <Panel className="min-h-full">
       <PanelHead
         title="Slice for X"
-        description={`Each tile ${TILE_WIDTH} × ${TILE_HEIGHT}`}
+        description={`Slice picture into tiles.`}
       >
         {hasImage ? (
           <Button type="button" variant="outline" size="sm" onClick={onNew}>
@@ -80,7 +90,24 @@ export function SidePanel({
       </Button>
 
       <div className="flex flex-row justify-between items-center gap-stack-tight">
-        <span className="text-caption text-muted-foreground">Tiles</span>
+        <span className="text-caption text-muted-foreground">Tile</span>
+        <div className="flex items-center gap-1">
+          <TileEdgeInput
+            label="Tile width"
+            value={tileWidth}
+            onChange={onTileWidth}
+          />
+          <span className="text-caption text-muted-foreground">×</span>
+          <TileEdgeInput
+            label="Tile height"
+            value={tileHeight}
+            onChange={onTileHeight}
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-row justify-between items-center gap-stack-tight">
+        <span className="text-caption text-muted-foreground">Count</span>
         <ButtonGroup aria-label="Tile count">
           <Button
             type="button"
@@ -92,7 +119,7 @@ export function SidePanel({
           >
             −
           </Button>
-          <Button type="button" variant="outline" size="sm" tabIndex={-1}>
+          <Button type="button" variant="outline" size="sm" className="text-md w-8" tabIndex={-1}>
             {sliceCount}
           </Button>
           <Button
@@ -111,7 +138,7 @@ export function SidePanel({
       <div className="flex flex-row justify-between items-center gap-stack-tight">
         <p className="text-caption text-muted-foreground">Size</p>
         <p className="text-body text-foreground tabular-nums">
-          {width} × {TILE_HEIGHT}
+          {width} × {tileHeight}
         </p>
       </div>
 
@@ -128,7 +155,11 @@ export function SidePanel({
             const next = Number(value);
             onRadius(Number.isNaN(next) ? 0 : next);
           }}
-          className="w-12 tabular-nums"
+          size="sm"
+          className="w-10 tabular-nums [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&_input[type=number]]:appearance-none"
+          style={{
+            MozAppearance: "textfield",
+          }}
         />
       </label>
 
@@ -189,5 +220,60 @@ export function SidePanel({
         </Button>
       </PanelFoot>
     </Panel>
+  );
+}
+
+function TileEdgeInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (next: number) => void;
+}) {
+  const focused = useRef(false);
+  const [draft, setDraft] = useState(String(value));
+
+  useEffect(() => {
+    if (!focused.current) setDraft(String(value));
+  }, [value]);
+
+  function commit(raw: string) {
+    const parsed = Number(raw);
+    const next = clampTileEdge(
+      raw === "" || Number.isNaN(parsed) ? value : parsed,
+    );
+    setDraft(String(next));
+    onChange(next);
+  }
+
+  return (
+    <Input
+      type="number"
+      min={MIN_TILE_EDGE}
+      max={MAX_TILE_EDGE}
+      step={1}
+      value={draft}
+      aria-label={label}
+      size="sm"
+      onFocus={() => {
+        focused.current = true;
+      }}
+      onBlur={() => {
+        focused.current = false;
+        commit(draft);
+      }}
+      onValueChange={(next) => {
+        setDraft(next);
+        const parsed = Number(next);
+        if (next === "" || Number.isNaN(parsed)) return;
+        onChange(parsed);
+      }}
+      className="w-13 tabular-nums text-xs [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&_input[type=number]]:appearance-none"
+      style={{
+        MozAppearance: "textfield",
+      }}
+    />
   );
 }

@@ -1,4 +1,3 @@
-import { TILE_HEIGHT, TILE_WIDTH } from "@/lib/constants";
 import { drawScene, type PlacedImage } from "@/lib/scene";
 
 const PREVIEW_TILE_WIDTH = 400;
@@ -10,12 +9,14 @@ export function revokePreviewUrls(urls: string[]) {
 export async function renderPreviewSlices(options: {
   images: PlacedImage[];
   sliceCount: number;
+  tileWidth: number;
+  tileHeight: number;
   background: string;
   radius: number;
 }) {
-  const scale = PREVIEW_TILE_WIDTH / TILE_WIDTH;
+  const scale = PREVIEW_TILE_WIDTH / options.tileWidth;
   const tileW = PREVIEW_TILE_WIDTH;
-  const tileH = Math.round(TILE_HEIGHT * scale);
+  const tileH = Math.round(options.tileHeight * scale);
   const full = document.createElement("canvas");
   full.width = tileW * options.sliceCount;
   full.height = tileH;
@@ -23,7 +24,14 @@ export async function renderPreviewSlices(options: {
   if (!ctx) throw new Error("Canvas unavailable");
 
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
-  drawScene(ctx, options);
+  drawScene(ctx, {
+    sliceCount: options.sliceCount,
+    tileWidth: options.tileWidth,
+    tileHeight: options.tileHeight,
+    background: options.background,
+    radius: options.radius,
+    images: options.images,
+  });
 
   const urls: string[] = [];
   try {
