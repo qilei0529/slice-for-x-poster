@@ -28,6 +28,11 @@ const BACKGROUND_PRESETS = [
   { label: "Light gray", value: "#e0e0e0" },
 ] as const;
 
+const paletteSwatchStyle = {
+  background:
+    "conic-gradient(#ff3b30, #ffcc00, #34c759, #32ade6, #5856d6, #ff2d55, #ff3b30)",
+} as const;
+
 type SidePanelProps = {
   sliceCount: number;
   tileWidth: number;
@@ -68,9 +73,17 @@ export function SidePanel({
   onExport,
 }: SidePanelProps) {
   const width = tileWidth * sliceCount;
-  const customSelected = !BACKGROUND_PRESETS.some((preset) =>
-    isSameColor(background, preset.value),
-  );
+  const [customColor, setCustomColor] = useState<string | null>(null);
+
+  function selectPreset(color: string) {
+    setCustomColor(null);
+    onBackground(color);
+  }
+
+  function selectCustom(color: string) {
+    setCustomColor(color);
+    onBackground(color);
+  }
 
   return (
     <Panel className="min-h-full">
@@ -167,14 +180,15 @@ export function SidePanel({
         <span className="text-caption text-muted-foreground">Background</span>
         <div className="flex items-center gap-inline">
           {BACKGROUND_PRESETS.map((preset) => {
-            const selected = isSameColor(background, preset.value);
+            const selected =
+              customColor == null && isSameColor(background, preset.value);
             return (
               <button
                 key={preset.value}
                 type="button"
                 aria-label={preset.label}
                 aria-pressed={selected}
-                onClick={() => onBackground(preset.value)}
+                onClick={() => selectPreset(preset.value)}
                 className={cn(
                   "size-5 rounded-control ring-2 ring-foreground/20 hover:ring-foreground/50",
                   selected && selectedSwatchClass,
@@ -185,16 +199,22 @@ export function SidePanel({
           })}
           <span
             className={cn(
-              "relative size-5 overflow-hidden rounded-control",
-              customSelected && selectedSwatchClass,
+              "relative size-5 overflow-hidden rounded-control ring-2 ring-foreground/20 hover:ring-foreground/50",
+              customColor != null && selectedSwatchClass,
             )}
+            style={
+              customColor != null
+                ? { backgroundColor: customColor }
+                : paletteSwatchStyle
+            }
           >
             <input
               type="color"
-              value={background}
+              value={customColor ?? "#ff3b30"}
               aria-label="Custom color"
-              onChange={(event) => onBackground(event.target.value)}
-              className="absolute -inset-1 size-8 -mt-0.5 cursor-pointer border-0 bg-transparent p-0"
+              aria-pressed={customColor != null}
+              onChange={(event) => selectCustom(event.target.value)}
+              className="absolute inset-0 size-full cursor-pointer opacity-0"
             />
           </span>
         </div>
