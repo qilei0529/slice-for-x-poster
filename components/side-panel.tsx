@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { version } from "@/package.json";
 import { FieldGroup } from "@/components/element/field-group";
 import { Panel, PanelFoot, PanelHead } from "@/components/element/panel";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Input } from "@/components/ui/input";
@@ -101,6 +102,7 @@ export function SidePanel({
             New
           </Button>
         ) : null}
+        <ThemeToggle />
       </PanelHead>
 
       <div className="flex flex-col gap-text-block">
