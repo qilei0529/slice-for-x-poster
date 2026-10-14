@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { version } from "@/package.json";
 import { FieldGroup } from "@/components/element/field-group";
 import { Panel, PanelFoot, PanelHead } from "@/components/element/panel";
 import { Button } from "@/components/ui/button";
@@ -92,6 +93,7 @@ export function SidePanel({
     <Panel className="min-h-full">
       <PanelHead
         title="Slice for X"
+        version={`v${version}`}
         description={`Slice picture into tiles.`}
       >
         {hasImage ? (

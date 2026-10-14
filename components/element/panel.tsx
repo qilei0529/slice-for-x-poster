@@ -19,10 +19,11 @@ export function Panel({ className, children, ...props }: PanelProps) {
 
 export type PanelHeadProps = React.ComponentProps<"header"> & {
   title?: React.ReactNode;
+  version?: React.ReactNode;
   description?: React.ReactNode;
 };
 
-export function PanelHead({ className, title, description, children, ...props }: PanelHeadProps) {
+export function PanelHead({ className, title, version, description, children, ...props }: PanelHeadProps) {
   return (
     <header
       className={cn(
@@ -36,9 +37,16 @@ export function PanelHead({ className, title, description, children, ...props }:
       <div className="flex flex-col">
         {title != null ? (
           <h2 className={cn(
-            "text-section-title font-medium text-foreground",
+            "flex items-baseline gap-2 text-section-title font-medium text-foreground",
             description != null ? "-mt-1" : "",
-          )}>{title}</h2>
+          )}>
+            {title}
+            {version != null ? (
+              <span className="text-caption font-normal text-muted-foreground tabular-nums">
+                {version}
+              </span>
+            ) : null}
+          </h2>
         ) : null}
         {description != null ? (
           <div className="text-xs mt-1 text-muted-foreground">{description}</div>
