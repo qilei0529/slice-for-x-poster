@@ -21,6 +21,10 @@ Open [http://localhost:3004](http://localhost:3004).
 
 ## Changelog
 
+### 0.2.2 — 2026-10-14
+
+- Remove a selected image from a dot above its top-left corner. Hover turns the dot into an X.
+
 ### 0.2.1 — 2026-10-14
 
 - Add a dark / light toggle in the top-right of the side panel.
