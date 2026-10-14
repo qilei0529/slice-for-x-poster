@@ -83,9 +83,7 @@ export function ClipEditor() {
     });
   }
 
-  function removeSelected() {
-    const id = selectedId;
-    if (!id) return;
+  function removeImage(id: string) {
     const item = imagesRef.current.find((image) => image.id === id);
     if (!item) return;
     URL.revokeObjectURL(item.url);
@@ -110,7 +108,7 @@ export function ClipEditor() {
       }
       if (!selectedId) return;
       event.preventDefault();
-      removeSelected();
+      removeImage(selectedId);
     }
 
     window.addEventListener("keydown", onKeyDown);
@@ -292,6 +290,7 @@ export function ClipEditor() {
           dragOver={dragOver}
           onSelect={setSelectedId}
           onFrameChange={updateFrame}
+          onRemove={removeImage}
           onPick={openPicker}
         />
         <div className="absolute right-3 bottom-3 space-x-2 text-right text-xs text-muted-foreground">

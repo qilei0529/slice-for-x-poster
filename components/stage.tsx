@@ -7,6 +7,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { XIcon } from "@/components/icons";
 import type { Corner, Frame, Point } from "@/lib/frame";
 import { resizeFrame } from "@/lib/frame";
 import { clampedRadius, drawScene, type PlacedImage } from "@/lib/scene";
@@ -39,6 +40,7 @@ type StageProps = {
   dragOver: boolean;
   onSelect: (id: string | null) => void;
   onFrameChange: (id: string, frame: Frame) => void;
+  onRemove: (id: string) => void;
   onPick: () => void;
 };
 
@@ -53,6 +55,7 @@ export function Stage({
   dragOver,
   onSelect,
   onFrameChange,
+  onRemove,
   onPick,
 }: StageProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -243,6 +246,30 @@ export function Stage({
                     }
                     style={{ borderRadius: frameBorderRadius(radius, item.frame) }}
                   />
+                  {selected ? (
+                    <button
+                      type="button"
+                      aria-label="Remove image"
+                      className="group absolute z-20 flex size-6 touch-none cursor-pointer items-center justify-center"
+                      style={{
+                        left: 0,
+                        top: 0,
+                        transform: "translate(-20%, calc(-100% - 5px))",
+                      }}
+                      onPointerDown={(event) => {
+                        event.stopPropagation();
+                      }}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onRemove(item.id);
+                      }}
+                    >
+                      <span className="size-4 rounded-full bg-red-500 group-hover:hidden" />
+                      <span className="hidden size-4 items-center justify-center rounded-full bg-red-500 text-white group-hover:flex">
+                        <XIcon className="size-2.5" />
+                      </span>
+                    </button>
+                  ) : null}
                   {selected
                     ? HANDLES.map((handle) => (
                         <button
