@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { FieldGroup } from "@/components/element/field-group";
 import { Panel, PanelFoot, PanelHead } from "@/components/element/panel";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -17,6 +18,8 @@ import { cn } from "@/lib/cn";
 
 const selectedSwatchClass =
   "ring-2 ring-foreground ring-offset-2 ring-offset-background";
+
+const fieldLabelClass = "text-body text-muted-foreground";
 
 function isSameColor(a: string, b: string) {
   return a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -98,126 +101,132 @@ export function SidePanel({
         ) : null}
       </PanelHead>
 
-      <Button type="button" variant="outline" onClick={onPick}>
-        {hasImage ? "Add image" : "Choose image"}
-      </Button>
-
-      <div className="flex flex-row justify-between items-center gap-stack-tight">
-        <span className="text-caption text-muted-foreground">Tile</span>
-        <div className="flex items-center gap-1">
-          <TileEdgeInput
-            label="Tile width"
-            value={tileWidth}
-            onChange={onTileWidth}
-          />
-          <span className="text-caption text-muted-foreground">×</span>
-          <TileEdgeInput
-            label="Tile height"
-            value={tileHeight}
-            onChange={onTileHeight}
-          />
-        </div>
-      </div>
-
-      <div className="flex flex-row justify-between items-center gap-stack-tight">
-        <span className="text-caption text-muted-foreground">Count</span>
-        <ButtonGroup aria-label="Tile count">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            aria-label="Fewer tiles"
-            disabled={sliceCount <= MIN_SLICES}
-            onClick={() => onSliceCount(sliceCount - 1)}
-          >
-            −
-          </Button>
-          <Button type="button" variant="outline" size="sm" className="text-md w-8" tabIndex={-1}>
-            {sliceCount}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            aria-label="More tiles"
-            disabled={sliceCount >= MAX_SLICES}
-            onClick={() => onSliceCount(sliceCount + 1)}
-          >
-            +
-          </Button>
-        </ButtonGroup>
-      </div>
-
-      <div className="flex flex-row justify-between items-center gap-stack-tight">
-        <p className="text-caption text-muted-foreground">Size</p>
-        <p className="text-body text-foreground tabular-nums">
-          {width} × {tileHeight}
-        </p>
-      </div>
-
-      <label className="flex items-center justify-between gap-inline">
-        <span className="text-caption text-muted-foreground">Radius</span>
-        <Input
-          type="number"
-          min={0}
-          max={MAX_RADIUS}
-          step={1}
-          value={radius}
-          aria-label="Corner radius"
-          onValueChange={(value) => {
-            const next = Number(value);
-            onRadius(Number.isNaN(next) ? 0 : next);
-          }}
-          size="sm"
-          className="w-10 tabular-nums [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&_input[type=number]]:appearance-none"
-          style={{
-            MozAppearance: "textfield",
-          }}
-        />
-      </label>
-
-      <div className="flex items-center justify-between gap-inline">
-        <span className="text-caption text-muted-foreground">Background</span>
-        <div className="flex items-center gap-inline">
-          {BACKGROUND_PRESETS.map((preset) => {
-            const selected =
-              customColor == null && isSameColor(background, preset.value);
-            return (
-              <button
-                key={preset.value}
-                type="button"
-                aria-label={preset.label}
-                aria-pressed={selected}
-                onClick={() => selectPreset(preset.value)}
-                className={cn(
-                  "size-5 rounded-control ring-2 ring-foreground/20 hover:ring-foreground/50",
-                  selected && selectedSwatchClass,
-                )}
-                style={{ backgroundColor: preset.value }}
+      <div className="flex flex-col gap-text-block">
+        <FieldGroup label="Canvas">
+          <div className="flex flex-row justify-between items-center gap-stack-tight">
+            <span className={fieldLabelClass}>Tile</span>
+            <div className="flex items-center gap-1">
+              <TileEdgeInput
+                label="Tile width"
+                value={tileWidth}
+                onChange={onTileWidth}
               />
-            );
-          })}
-          <span
-            className={cn(
-              "relative size-5 overflow-hidden rounded-control ring-2 ring-foreground/20 hover:ring-foreground/50",
-              customColor != null && selectedSwatchClass,
-            )}
-            style={
-              customColor != null
-                ? { backgroundColor: customColor }
-                : paletteSwatchStyle
-            }
-          >
-            <input
-              type="color"
-              value={customColor ?? "#ff3b30"}
-              aria-label="Custom color"
-              aria-pressed={customColor != null}
-              onChange={(event) => selectCustom(event.target.value)}
-              className="absolute inset-0 size-full cursor-pointer opacity-0"
+              <span className={fieldLabelClass}>×</span>
+              <TileEdgeInput
+                label="Tile height"
+                value={tileHeight}
+                onChange={onTileHeight}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-row justify-between items-center gap-stack-tight">
+            <span className={fieldLabelClass}>Count</span>
+            <ButtonGroup aria-label="Tile count">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                aria-label="Fewer tiles"
+                disabled={sliceCount <= MIN_SLICES}
+                onClick={() => onSliceCount(sliceCount - 1)}
+              >
+                −
+              </Button>
+              <Button type="button" variant="outline" size="sm" className="text-md w-8" tabIndex={-1}>
+                {sliceCount}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                aria-label="More tiles"
+                disabled={sliceCount >= MAX_SLICES}
+                onClick={() => onSliceCount(sliceCount + 1)}
+              >
+                +
+              </Button>
+            </ButtonGroup>
+          </div>
+
+          <div className="flex flex-row justify-between items-center gap-stack-tight">
+            <p className={fieldLabelClass}>Size</p>
+            <p className="text-body text-foreground tabular-nums">
+              {width} × {tileHeight}
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between gap-inline">
+            <span className={fieldLabelClass}>Background</span>
+            <div className="flex items-center gap-inline">
+              {BACKGROUND_PRESETS.map((preset) => {
+                const selected =
+                  customColor == null && isSameColor(background, preset.value);
+                return (
+                  <button
+                    key={preset.value}
+                    type="button"
+                    aria-label={preset.label}
+                    aria-pressed={selected}
+                    onClick={() => selectPreset(preset.value)}
+                    className={cn(
+                      "size-5 rounded-control ring-2 ring-foreground/20 hover:ring-foreground/50",
+                      selected && selectedSwatchClass,
+                    )}
+                    style={{ backgroundColor: preset.value }}
+                  />
+                );
+              })}
+              <span
+                className={cn(
+                  "relative size-5 overflow-hidden rounded-control ring-2 ring-foreground/20 hover:ring-foreground/50",
+                  customColor != null && selectedSwatchClass,
+                )}
+                style={
+                  customColor != null
+                    ? { backgroundColor: customColor }
+                    : paletteSwatchStyle
+                }
+              >
+                <input
+                  type="color"
+                  value={customColor ?? "#ff3b30"}
+                  aria-label="Custom color"
+                  aria-pressed={customColor != null}
+                  onChange={(event) => selectCustom(event.target.value)}
+                  className="absolute inset-0 size-full cursor-pointer opacity-0"
+                />
+              </span>
+            </div>
+          </div>
+        </FieldGroup>
+
+        <FieldGroup label="Image">
+          <Button type="button" variant="outline" onClick={onPick}>
+            {hasImage ? "Add image" : "Choose image"}
+          </Button>
+
+          <label className="flex items-center justify-between gap-inline">
+            <span className={fieldLabelClass}>Radius</span>
+            <Input
+              type="number"
+              min={0}
+              max={MAX_RADIUS}
+              step={1}
+              value={radius}
+              aria-label="Corner radius"
+              onValueChange={(value) => {
+                const next = Number(value);
+                onRadius(Number.isNaN(next) ? 0 : next);
+              }}
+              size="sm"
+              className="w-10 tabular-nums [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&_input[type=number]]:appearance-none"
+              style={{
+                MozAppearance: "textfield",
+              }}
             />
-          </span>
-        </div>
+          </label>
+        </FieldGroup>
       </div>
 
       {error ? <p className="text-caption text-destructive">{error}</p> : null}
