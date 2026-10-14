@@ -300,7 +300,7 @@ export function ClipEditor() {
             DESIGN BY <a className="hover:underline text-body hover:text-foreground" href="https://x.com/qilei" target="_blank"> @qilei</a>
           </span>
           <span>
-            WITH <a href="https://bon-ui.com" className="hover:underline text-body hover:text-foreground" target="_blank"> bon-ui</a>
+            WITH <a href="https://bon-ui.com" className="hover:underline text-body hover:text-foreground" target="_blank"> @bon-ui</a>
           </span>
         </div>
       </div>
