@@ -115,28 +115,28 @@ export function PreviewDialog({
               showClose
             />
             <DialogContent maxHeight="680px">
-              <article className="text-[#0f1419]">
+              <article className="text-foreground">
                 <header className="flex gap-3">
                   <div
                     aria-hidden
-                    className="size-10 shrink-0 rounded-full bg-[#cfd9de]"
+                    className="size-10 shrink-0 rounded-full bg-muted"
                   />
                   <div className="min-w-0">
                     <p className="text-[15px] leading-5 font-bold">Elon Musk</p>
-                    <p className="text-[15px] leading-5 text-[#536471]">@x</p>
+                    <p className="text-[15px] leading-5 text-muted-foreground">@x</p>
                   </div>
                 </header>
 
                 <div className="mt-3 pl-13">
-                  <div className="mb-1 h-4 w-48 bg-[#cfd9de]/50"></div>
-                  <div className="mb-4 h-4 w-64 bg-[#cfd9de]/50"></div>
+                  <div className="mb-1 h-4 w-48 bg-muted"></div>
+                  <div className="mb-4 h-4 w-64 bg-muted"></div>
                   {phase === "loading" || phase === "idle" ? (
-                    <p className="py-16 text-center text-[15px] text-[#536471]">
+                    <p className="py-16 text-center text-[15px] text-muted-foreground">
                       Preparing preview…
                     </p>
                   ) : null}
                   {phase === "error" ? (
-                    <p className="py-16 text-center text-[15px] text-[#536471]">
+                    <p className="py-16 text-center text-[15px] text-muted-foreground">
                       Couldn&apos;t build the preview.
                     </p>
                   ) : null}
@@ -149,7 +149,7 @@ export function PreviewDialog({
                   ) : null}
                 </div>
 
-                <div className="mt-3 flex items-center justify-between px-1 pb-1 pl-13 text-[#536471]">
+                <div className="mt-3 flex items-center justify-between px-1 pb-1 pl-13 text-muted-foreground">
                   <ReplyIcon />
                   <RepostIcon />
                   <LikeIcon />
