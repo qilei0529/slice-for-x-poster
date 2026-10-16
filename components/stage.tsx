@@ -7,7 +7,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { XIcon } from "@/components/icons";
+import { ArrowDownIcon, ArrowUpIcon, XIcon } from "@/components/icons";
 import type { Corner, Frame, Point } from "@/lib/frame";
 import { resizeFrame } from "@/lib/frame";
 import { clampedRadius, drawScene, type PlacedImage } from "@/lib/scene";
@@ -41,7 +41,9 @@ type StageProps = {
   onSelect: (id: string | null) => void;
   onFrameChange: (id: string, frame: Frame) => void;
   onRemove: (id: string) => void;
+  onReorder: (id: string, edge: "front" | "back") => void;
   onPick: () => void;
+  onDisplaySize: (size: { viewW: number; viewH: number }) => void;
 };
 
 export function Stage({
@@ -56,7 +58,9 @@ export function Stage({
   onSelect,
   onFrameChange,
   onRemove,
+  onReorder,
   onPick,
+  onDisplaySize,
 }: StageProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -65,10 +69,16 @@ export function Stage({
   const stopDragRef = useRef<(() => void) | null>(null);
   const [box, setBox] = useState({ w: 0, h: 0 });
   const [cursor, setCursor] = useState<string | null>(null);
+  const onDisplaySizeRef = useRef(onDisplaySize);
+  onDisplaySizeRef.current = onDisplaySize;
 
   const logicalW = tileWidth * sliceCount;
   const logicalH = tileHeight;
   const fitted = fitCanvas(box.w, box.h, logicalW, logicalH);
+
+  useEffect(() => {
+    onDisplaySizeRef.current({ viewW: fitted.viewW, viewH: fitted.viewH });
+  }, [fitted.viewW, fitted.viewH]);
 
   useLayoutEffect(() => {
     const wrap = wrapRef.current;
@@ -247,28 +257,66 @@ export function Stage({
                     style={{ borderRadius: frameBorderRadius(radius, item.frame) }}
                   />
                   {selected ? (
-                    <button
-                      type="button"
-                      aria-label="Remove image"
-                      className="group absolute z-20 flex size-6 touch-none cursor-pointer items-center justify-center"
+                    <div
+                      className="absolute z-20 flex touch-none"
                       style={{
                         left: 0,
                         top: 0,
-                        transform: "translate(-20%, calc(-100% - 5px))",
-                      }}
-                      onPointerDown={(event) => {
-                        event.stopPropagation();
-                      }}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onRemove(item.id);
+                        transform: "translate(0px, calc(-100% - 5px))",
                       }}
                     >
-                      <span className="size-4 rounded-full bg-red-500 group-hover:hidden" />
-                      <span className="hidden size-4 items-center justify-center rounded-full bg-red-500 text-white group-hover:flex">
-                        <XIcon className="size-2.5" />
-                      </span>
-                    </button>
+                      <button
+                        type="button"
+                        aria-label="Remove image"
+                        className="group flex size-6 cursor-pointer items-center justify-center"
+                        onPointerDown={(event) => {
+                          event.stopPropagation();
+                        }}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onRemove(item.id);
+                        }}
+                      >
+                        <span className="size-4 rounded-full bg-red-500 group-hover:hidden" />
+                        <span className="hidden size-4 items-center justify-center rounded-full bg-red-500 text-white group-hover:flex">
+                          <XIcon className="size-2.5" />
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Bring to front"
+                        disabled={index === images.length - 1}
+                        className="flex size-6 cursor-pointer items-center justify-center text-white disabled:cursor-default disabled:opacity-40"
+                        onPointerDown={(event) => {
+                          event.stopPropagation();
+                        }}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onReorder(item.id, "front");
+                        }}
+                      >
+                        <span className="flex size-4 items-center justify-center rounded-full bg-neutral-900">
+                          <ArrowUpIcon className="size-2.5" />
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Send to back"
+                        disabled={index === 0}
+                        className="flex size-6 cursor-pointer items-center justify-center text-white disabled:cursor-default disabled:opacity-40"
+                        onPointerDown={(event) => {
+                          event.stopPropagation();
+                        }}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onReorder(item.id, "back");
+                        }}
+                      >
+                        <span className="flex size-4 items-center justify-center rounded-full bg-neutral-900">
+                          <ArrowDownIcon className="size-2.5" />
+                        </span>
+                      </button>
+                    </div>
                   ) : null}
                   {selected
                     ? HANDLES.map((handle) => (
@@ -310,7 +358,7 @@ export function Stage({
               className="absolute inset-0 flex items-center justify-center"
             >
               <span className="rounded-full bg-black/50 px-4 py-2 text-sm text-white backdrop-blur-sm">
-                Drop an image, or click to choose
+                Drop, paste, or click to choose an image
               </span>
             </button>
           )}

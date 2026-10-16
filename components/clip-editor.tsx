@@ -23,8 +23,38 @@ import type { PlacedImage } from "@/lib/scene";
 
 const PLACE_OFFSET = 48;
 
+function filesFromClipboard(data: DataTransfer | null) {
+  if (!data) return [];
+  const files: File[] = [];
+  const seen = new Set<string>();
+
+  function add(file: File | null) {
+    if (!file || !file.type.startsWith("image/")) return;
+    const key = `${file.name}:${file.size}:${file.lastModified}:${file.type}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    files.push(file);
+  }
+
+  for (const item of data.items) {
+    if (item.kind === "file") add(item.getAsFile());
+  }
+  for (const file of data.files) add(file);
+  return files;
+}
+
+function isTypingTarget(target: EventTarget | null) {
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement ||
+    (target instanceof HTMLElement && target.isContentEditable)
+  );
+}
+
 export function ClipEditor() {
   const inputRef = useRef<HTMLInputElement>(null);
+  const loadFilesRef = useRef<(fileList: FileList | File[]) => void>(() => {});
   const imagesRef = useRef<PlacedImage[]>([]);
   const nextSlotRef = useRef(0);
   const mountedRef = useRef(true);
@@ -40,6 +70,7 @@ export function ClipEditor() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [displaySize, setDisplaySize] = useState({ viewW: 0, viewH: 0 });
   const [previewOpen, setPreviewOpen] = useState(false);
   const [isExporting, startExport] = useTransition();
 
@@ -93,16 +124,40 @@ export function ClipEditor() {
     setSelectedId(null);
   }
 
+  function reorderImage(id: string, edge: "front" | "back") {
+    const current = imagesRef.current;
+    const index = current.findIndex((image) => image.id === id);
+    if (index < 0) return;
+    if (edge === "front" && index === current.length - 1) return;
+    if (edge === "back" && index === 0) return;
+    const next = current.filter((image) => image.id !== id);
+    const item = current[index];
+    if (edge === "front") next.push(item);
+    else next.unshift(item);
+    imagesRef.current = next;
+    setImages(next);
+  }
+
+  useEffect(() => {
+    function onPaste(event: ClipboardEvent) {
+      if (isTypingTarget(event.target)) return;
+      const files = filesFromClipboard(event.clipboardData);
+      if (files.length === 0) return;
+      event.preventDefault();
+      loadFilesRef.current(files);
+    }
+
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, []);
+
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.key !== "Delete" && event.key !== "Backspace") return;
-      const target = event.target;
+      if (isTypingTarget(event.target)) return;
       if (
-        target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement ||
-        target instanceof HTMLSelectElement ||
-        (target instanceof HTMLElement &&
-          (target.isContentEditable || target.closest("[role='dialog']")))
+        event.target instanceof HTMLElement &&
+        event.target.closest("[role='dialog']")
       ) {
         return;
       }
@@ -141,6 +196,8 @@ export function ClipEditor() {
     nextSlotRef.current += files.length;
     files.forEach((file, index) => loadFile(file, start + index));
   }
+
+  loadFilesRef.current = loadFiles;
 
   function loadFile(file: File, slot: number) {
     const url = URL.createObjectURL(file);
@@ -262,6 +319,8 @@ export function ClipEditor() {
           onNew={clearImages}
           onPreview={() => setPreviewOpen(true)}
           onExport={handleExport}
+          displayWidth={displaySize.viewW}
+          displayHeight={displaySize.viewH}
         />
       </aside>
       <PreviewDialog
@@ -291,7 +350,9 @@ export function ClipEditor() {
           onSelect={setSelectedId}
           onFrameChange={updateFrame}
           onRemove={removeImage}
+          onReorder={reorderImage}
           onPick={openPicker}
+          onDisplaySize={setDisplaySize}
         />
         <div className="absolute right-3 bottom-3 space-x-2 text-right text-xs text-muted-foreground">
 

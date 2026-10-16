@@ -56,6 +56,8 @@ type SidePanelProps = {
   onNew: () => void;
   onPreview: () => void;
   onExport: () => void;
+  displayWidth: number;
+  displayHeight: number;
 };
 
 export function SidePanel({
@@ -76,8 +78,18 @@ export function SidePanel({
   onNew,
   onPreview,
   onExport,
+  displayWidth,
+  displayHeight,
 }: SidePanelProps) {
   const width = tileWidth * sliceCount;
+  const shown =
+    displayWidth > 0 && displayHeight > 0
+      ? `${Math.round(displayWidth)} × ${Math.round(displayHeight)}`
+      : null;
+  const scale =
+    shown != null && width > 0
+      ? `${Math.round((displayWidth / width) * 100)}%`
+      : null;
   const [customColor, setCustomColor] = useState<string | null>(null);
 
   function selectPreset(color: string) {
@@ -157,6 +169,20 @@ export function SidePanel({
             <p className={fieldLabelClass}>Size</p>
             <p className="text-body text-foreground tabular-nums">
               {width} × {tileHeight}
+            </p>
+          </div>
+
+          <div className="flex flex-row justify-between items-center gap-stack-tight">
+            <p className={fieldLabelClass}>Shown</p>
+            <p className="text-body text-foreground tabular-nums">
+              {shown ?? "—"}
+            </p>
+          </div>
+
+          <div className="flex flex-row justify-between items-center gap-stack-tight">
+            <p className={fieldLabelClass}>Scale</p>
+            <p className="text-body text-foreground tabular-nums">
+              {scale ?? "—"}
             </p>
           </div>
 
