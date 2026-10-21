@@ -29,6 +29,10 @@ Prefer `loadImage({ base64 })` when a remote URL is blocked by CORS. Prefer `set
 
 ## Changelog
 
+### 0.2.5 — 2026-10-21
+
+- Move the theme toggle to the top-right of the screen, with a GitHub link beside it.
+
 ### 0.2.4 — 2026-10-21
 
 - Add a computer-use control surface: `/agent.json`, stable `data-agent` markers, and `window.SliceForX` (URL/base64 load, config, frames, export).

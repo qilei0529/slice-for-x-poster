@@ -106,6 +106,12 @@
       "role": "textbox"
     },
     {
+      "id": "github-link",
+      "description": "Open the GitHub repository",
+      "selector": "[data-agent='github-link']",
+      "role": "link"
+    },
+    {
       "id": "theme-toggle",
       "description": "Toggle dark / light theme",
       "selector": "[data-agent='theme-toggle']",

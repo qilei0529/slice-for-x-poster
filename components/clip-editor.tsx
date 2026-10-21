@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { version } from "@/package.json";
+import { GitHubIcon } from "@/components/icons";
 import { Logo } from "@/components/logo";
 import { PreviewDialog } from "@/components/preview-dialog";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { WelcomeDialog } from "@/components/welcome-dialog";
 import { SidePanel } from "@/components/side-panel";
 import { Stage } from "@/components/stage";
@@ -67,7 +69,7 @@ function nameFromFile(file: File) {
 
 export function ClipEditor() {
   const inputRef = useRef<HTMLInputElement>(null);
-  const loadFilesRef = useRef<(fileList: FileList | File[]) => void>(() => {});
+  const loadFilesRef = useRef<(fileList: FileList | File[]) => void>(() => { });
   const handlersRef = useRef<AgentApiHandlers | null>(null);
   const imagesRef = useRef<PlacedImage[]>([]);
   const nextSlotRef = useRef(0);
@@ -408,7 +410,7 @@ export function ClipEditor() {
 
   return (
     <div
-      className="flex flex-col-reverse md:flex-row h-dvh overflow-hidden bg-background text-foreground select-none"
+      className="relative flex flex-col-reverse md:flex-row h-dvh overflow-hidden bg-background text-foreground select-none"
       onDragOver={(event) => {
         event.preventDefault();
         setDragOver(true);
@@ -425,6 +427,25 @@ export function ClipEditor() {
         if (fileList.length > 0) loadFiles(fileList);
       }}
     >
+      <div className="absolute right-3 top-3 z-20 flex items-center gap-2">
+
+        <a
+          href="https://github.com/qilei0529/slice-for-x-poster"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="GitHub repository"
+          data-agent="github-link"
+          className="rounded-full bg-neutral-800 hover:bg-primary size-6 flex items-center justify-center p-0 text-white"
+        >
+          <GitHubIcon className="size-5 -mb-1.5" />
+        </a>
+
+        <span
+          aria-hidden
+          className="h-4 w-px shrink-0 bg-border"
+        />
+        <ThemeToggle />
+      </div>
       <input
         ref={inputRef}
         type="file"
