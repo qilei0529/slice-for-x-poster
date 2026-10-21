@@ -2,7 +2,7 @@
 
 Slice one picture into portrait tiles for an X post. Everything runs in the browser.
 
-Each tile is **1646 × 2048**. Choose 1–4 tiles, set a background and corner radius, preview the post, then download a zip of PNGs.
+Each tile is **1646 × 2048**. Choose 1–4 tiles, set a background and corner radius, preview the post, then download a zip of JPGs.
 
 ## Run
 
@@ -20,6 +20,12 @@ Open [http://localhost:3004](http://localhost:3004).
 
 
 ## Changelog
+
+### 0.2.3 — 2026-10-21
+
+- Export tiles as JPEG instead of PNG for smaller Twitter-ready uploads.
+- Zoom the stage with the mouse wheel and pan by dragging empty space; initial scale fits the viewport.
+- Use the hand cursor only when a selected image is hovered or moved.
 
 ### 0.2.2 — 2026-10-14
 
