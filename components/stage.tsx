@@ -25,9 +25,20 @@ const HANDLES: Array<{
   { corner: "se", left: "100%", top: "100%", cursor: "nwse-resize", label: "bottom right" },
 ];
 
+const ZOOM_MIN_FACTOR = 0.5;
+const ZOOM_MAX_FACTOR = 8;
+const ZOOM_STEP = 1.1;
+const PAN_MOVE_THRESHOLD = 3;
+
 type Drag =
   | { kind: "move"; imageId: string; startPointer: Point; startFrame: Frame }
   | { kind: "resize"; imageId: string; corner: Corner; startFrame: Frame };
+
+type ViewState = {
+  scale: number;
+  pan: Point;
+  logicalKey: string;
+};
 
 type StageProps = {
   sliceCount: number;
@@ -67,18 +78,30 @@ export function Stage({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dragRef = useRef<Drag | null>(null);
   const stopDragRef = useRef<(() => void) | null>(null);
+  const panMovedRef = useRef(false);
+  const viewRef = useRef<ViewState>({ scale: 0, pan: { x: 0, y: 0 }, logicalKey: "" });
   const [box, setBox] = useState({ w: 0, h: 0 });
+  const [view, setView] = useState<ViewState>({
+    scale: 0,
+    pan: { x: 0, y: 0 },
+    logicalKey: "",
+  });
   const [cursor, setCursor] = useState<string | null>(null);
   const onDisplaySizeRef = useRef(onDisplaySize);
   onDisplaySizeRef.current = onDisplaySize;
+  viewRef.current = view;
 
   const logicalW = tileWidth * sliceCount;
   const logicalH = tileHeight;
-  const fitted = fitCanvas(box.w, box.h, logicalW, logicalH);
+  const fit = fitCanvas(box.w, box.h, logicalW, logicalH);
+  const viewW = view.scale > 0 ? logicalW * view.scale : 0;
+  const viewH = view.scale > 0 ? logicalH * view.scale : 0;
+  const stageLeft = viewW > 0 ? (box.w - viewW) / 2 + view.pan.x : 0;
+  const stageTop = viewH > 0 ? (box.h - viewH) / 2 + view.pan.y : 0;
 
   useEffect(() => {
-    onDisplaySizeRef.current({ viewW: fitted.viewW, viewH: fitted.viewH });
-  }, [fitted.viewW, fitted.viewH]);
+    onDisplaySizeRef.current({ viewW, viewH });
+  }, [viewW, viewH]);
 
   useLayoutEffect(() => {
     const wrap = wrapRef.current;
@@ -98,28 +121,76 @@ export function Stage({
     return () => observer.disconnect();
   }, []);
 
+  useLayoutEffect(() => {
+    if (fit.scale <= 0) return;
+    const logicalKey = `${logicalW}x${logicalH}`;
+    setView((current) => {
+      if (current.scale === 0 || current.logicalKey !== logicalKey) {
+        return { scale: fit.scale, pan: { x: 0, y: 0 }, logicalKey };
+      }
+      return current;
+    });
+  }, [fit.scale, logicalW, logicalH]);
+
   useEffect(() => {
     return () => stopDragRef.current?.();
   }, []);
 
   useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const current = viewRef.current;
+      if (current.scale <= 0 || fit.scale <= 0) return;
+
+      const rect = wrap.getBoundingClientRect();
+      const cursorX = event.clientX - rect.left;
+      const cursorY = event.clientY - rect.top;
+      const prevViewW = logicalW * current.scale;
+      const prevViewH = logicalH * current.scale;
+      const prevLeft = (box.w - prevViewW) / 2 + current.pan.x;
+      const prevTop = (box.h - prevViewH) / 2 + current.pan.y;
+      const localX = cursorX - prevLeft;
+      const localY = cursorY - prevTop;
+
+      const direction = event.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP;
+      const nextScale = clamp(
+        current.scale * direction,
+        fit.scale * ZOOM_MIN_FACTOR,
+        fit.scale * ZOOM_MAX_FACTOR,
+      );
+      if (nextScale === current.scale) return;
+
+      const ratio = nextScale / current.scale;
+      const nextViewW = logicalW * nextScale;
+      const nextViewH = logicalH * nextScale;
+      setView({
+        scale: nextScale,
+        pan: {
+          x: cursorX - (box.w - nextViewW) / 2 - localX * ratio,
+          y: cursorY - (box.h - nextViewH) / 2 - localY * ratio,
+        },
+        logicalKey: current.logicalKey,
+      });
+    };
+
+    wrap.addEventListener("wheel", onWheel, { passive: false });
+    return () => wrap.removeEventListener("wheel", onWheel);
+  }, [box.w, box.h, fit.scale, logicalH, logicalW]);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || fitted.viewW < 1 || fitted.viewH < 1) return;
+    if (!canvas || viewW < 1 || viewH < 1) return;
 
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.max(1, Math.round(fitted.viewW * dpr));
-    canvas.height = Math.max(1, Math.round(fitted.viewH * dpr));
+    canvas.width = Math.max(1, Math.round(viewW * dpr));
+    canvas.height = Math.max(1, Math.round(viewH * dpr));
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.setTransform(
-      (fitted.viewW / logicalW) * dpr,
-      0,
-      0,
-      (fitted.viewH / logicalH) * dpr,
-      0,
-      0,
-    );
+    ctx.setTransform((viewW / logicalW) * dpr, 0, 0, (viewH / logicalH) * dpr, 0, 0);
     drawScene(ctx, {
       sliceCount,
       tileWidth,
@@ -133,15 +204,15 @@ export function Stage({
     drawGuides(ctx, {
       sliceCount,
       tileWidth,
-      viewW: fitted.viewW,
-      viewH: fitted.viewH,
+      viewW,
+      viewH,
       logicalW,
     });
   }, [
     background,
     radius,
-    fitted.viewH,
-    fitted.viewW,
+    viewH,
+    viewW,
     images,
     logicalH,
     logicalW,
@@ -159,12 +230,52 @@ export function Stage({
     };
   }
 
-  function startDrag(event: ReactPointerEvent, drag: Drag, cursor: string) {
+  function startPan(event: ReactPointerEvent) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    stopDragRef.current?.();
+    panMovedRef.current = false;
+    const startClientX = event.clientX;
+    const startClientY = event.clientY;
+    const startPanPoint = { ...viewRef.current.pan };
+
+    const onMove = (moveEvent: PointerEvent) => {
+      const dx = moveEvent.clientX - startClientX;
+      const dy = moveEvent.clientY - startClientY;
+      if (Math.hypot(dx, dy) >= PAN_MOVE_THRESHOLD) {
+        panMovedRef.current = true;
+      }
+      setView((current) => ({
+        ...current,
+        pan: {
+          x: startPanPoint.x + dx,
+          y: startPanPoint.y + dy,
+        },
+      }));
+    };
+
+    const onUp = () => {
+      if (!panMovedRef.current) {
+        onSelect(null);
+      }
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      stopDragRef.current = null;
+    };
+
+    stopDragRef.current = onUp;
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+  }
+
+  function startDrag(event: ReactPointerEvent, drag: Drag, nextCursor: string) {
     event.preventDefault();
     event.stopPropagation();
     stopDragRef.current?.();
     dragRef.current = drag;
-    setCursor(cursor);
+    setCursor(nextCursor);
 
     const onMove = (moveEvent: PointerEvent) => {
       const current = dragRef.current;
@@ -202,15 +313,24 @@ export function Stage({
   }
 
   return (
-    <div ref={wrapRef} className="flex h-full min-h-0 items-center justify-center">
-      {fitted.viewW > 0 ? (
+    <div
+      ref={wrapRef}
+      className="relative h-full min-h-0 cursor-default overflow-hidden"
+      style={cursor ? { cursor } : undefined}
+      onPointerDown={startPan}
+    >
+      {viewW > 0 ? (
         <div
           ref={stageRef}
-          className={`relative shadow-[0_4px_24px_-12px_rgba(0,0,0,0.06)] ${
+          className={`absolute cursor-default shadow-[0_4px_24px_-12px_rgba(0,0,0,0.06)] ${
             dragOver ? "" : ""
           }`}
-          style={{ width: fitted.viewW, height: fitted.viewH, cursor: cursor ?? undefined }}
-          onPointerDown={() => onSelect(null)}
+          style={{
+            left: stageLeft,
+            top: stageTop,
+            width: viewW,
+            height: viewH,
+          }}
         >
           <canvas ref={canvasRef} className="absolute inset-0 block h-full w-full" />
           {images.length > 0 ? (
@@ -231,7 +351,11 @@ export function Stage({
                   <div
                     aria-label="Drag image"
                     className="absolute inset-0 touch-none"
-                    style={{ cursor: selected && cursor ? cursor : "grab" }}
+                    style={{
+                      cursor: selected
+                        ? cursor ?? "grab"
+                        : "default",
+                    }}
                     onPointerDown={(event) => {
                       const pointer = pointFromEvent(event);
                       if (!pointer) return;
@@ -354,7 +478,10 @@ export function Stage({
           ) : (
             <button
               type="button"
-              onClick={onPick}
+              onClick={() => {
+                if (panMovedRef.current) return;
+                onPick();
+              }}
               className="absolute inset-0 flex items-center justify-center"
             >
               <span className="rounded-full bg-black/50 px-4 py-2 text-sm text-white backdrop-blur-sm">
@@ -380,13 +507,18 @@ function fitCanvas(boxW: number, boxH: number, logicalW: number, logicalH: numbe
   const availW = Math.max(0, boxW - CANVAS_INSET * 2);
   const availH = Math.max(0, boxH - CANVAS_INSET * 2);
   if (availW === 0 || availH === 0) {
-    return { viewW: 0, viewH: 0 };
+    return { scale: 0, viewW: 0, viewH: 0 };
   }
   const scale = Math.min(availW / logicalW, availH / logicalH);
   return {
+    scale,
     viewW: logicalW * scale,
     viewH: logicalH * scale,
   };
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
 }
 
 function drawGuides(
