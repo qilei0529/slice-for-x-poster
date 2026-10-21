@@ -185,6 +185,7 @@ export function DialogCloseIcon({
   return (
     <BaseDialog.Close
       aria-label="Close"
+      data-agent="dialog-close"
       className={cn(absolute && dialogCloseIconPositionStyles, className)}
       render={
         <Button variant="ghost" size="sm" className={dialogCloseIconButtonStyles} />

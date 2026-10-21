@@ -1,11 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { version } from "@/package.json";
 import { Logo } from "@/components/logo";
 import { PreviewDialog } from "@/components/preview-dialog";
 import { WelcomeDialog } from "@/components/welcome-dialog";
 import { SidePanel } from "@/components/side-panel";
 import { Stage } from "@/components/stage";
+import {
+  type AgentApiHandlers,
+  type AgentConfigPatch,
+  type LoadImageInput,
+  mountSliceForX,
+  resolveImageSource,
+} from "@/lib/agent-api";
 import {
   DEFAULT_BACKGROUND,
   DEFAULT_RADIUS,
@@ -52,15 +60,27 @@ function isTypingTarget(target: EventTarget | null) {
   );
 }
 
+function nameFromFile(file: File) {
+  const dot = file.name.lastIndexOf(".");
+  return (dot > 0 ? file.name.slice(0, dot) : file.name) || "slice";
+}
+
 export function ClipEditor() {
   const inputRef = useRef<HTMLInputElement>(null);
   const loadFilesRef = useRef<(fileList: FileList | File[]) => void>(() => {});
+  const handlersRef = useRef<AgentApiHandlers | null>(null);
   const imagesRef = useRef<PlacedImage[]>([]);
   const nextSlotRef = useRef(0);
   const mountedRef = useRef(true);
   const sliceCountRef = useRef(DEFAULT_SLICES);
   const tileWidthRef = useRef(DEFAULT_TILE_WIDTH);
   const tileHeightRef = useRef(DEFAULT_TILE_HEIGHT);
+  const backgroundRef = useRef(DEFAULT_BACKGROUND);
+  const radiusRef = useRef(DEFAULT_RADIUS);
+  const selectedIdRef = useRef<string | null>(null);
+  const previewOpenRef = useRef(false);
+  const exportingRef = useRef(false);
+  const errorRef = useRef<string | null>(null);
   const [sliceCount, setSliceCount] = useState(DEFAULT_SLICES);
   const [tileWidth, setTileWidth] = useState(DEFAULT_TILE_WIDTH);
   const [tileHeight, setTileHeight] = useState(DEFAULT_TILE_HEIGHT);
@@ -74,12 +94,37 @@ export function ClipEditor() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [isExporting, startExport] = useTransition();
 
+  backgroundRef.current = background;
+  radiusRef.current = radius;
+  selectedIdRef.current = selectedId;
+  previewOpenRef.current = previewOpen;
+  exportingRef.current = isExporting;
+  errorRef.current = error;
+
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
       for (const item of imagesRef.current) URL.revokeObjectURL(item.url);
     };
+  }, []);
+
+  useEffect(() => {
+    return mountSliceForX(
+      {
+        getState: () => handlersRef.current!.getState(),
+        setConfig: (patch) => handlersRef.current!.setConfig(patch),
+        loadImage: (input) => handlersRef.current!.loadImage(input),
+        clear: () => handlersRef.current!.clear(),
+        select: (id) => handlersRef.current!.select(id),
+        remove: (id) => handlersRef.current!.remove(id),
+        reorder: (id, edge) => handlersRef.current!.reorder(id, edge),
+        setFrame: (id, frame) => handlersRef.current!.setFrame(id, frame),
+        preview: (open) => handlersRef.current!.preview(open),
+        export: () => handlersRef.current!.export(),
+      },
+      version,
+    );
   }, []);
 
   function updateSliceCount(count: number) {
@@ -101,7 +146,14 @@ export function ClipEditor() {
   }
 
   function updateRadius(next: number) {
-    setRadius(Math.min(MAX_RADIUS, Math.max(0, next)));
+    const value = Math.min(MAX_RADIUS, Math.max(0, next));
+    radiusRef.current = value;
+    setRadius(value);
+  }
+
+  function updateBackground(color: string) {
+    backgroundRef.current = color;
+    setBackground(color);
   }
 
   function updateFrame(id: string, frame: Frame) {
@@ -184,6 +236,67 @@ export function ClipEditor() {
     inputRef.current?.click();
   }
 
+  function placeImageFromSrc(
+    src: string,
+    name: string,
+    slot: number,
+    objectUrl: boolean,
+  ): Promise<{ id: string }> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        if (!mountedRef.current) {
+          if (objectUrl) URL.revokeObjectURL(src);
+          reject(new Error("Editor unmounted"));
+          return;
+        }
+        if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+          if (objectUrl) URL.revokeObjectURL(src);
+          setError("Couldn't read this image");
+          reject(new Error("Couldn't read this image"));
+          return;
+        }
+        const count = sliceCountRef.current;
+        const base = containFrame(
+          img.naturalWidth,
+          img.naturalHeight,
+          tileWidthRef.current * count,
+          tileHeightRef.current,
+        );
+        const offset = slot * PLACE_OFFSET;
+        const placed: PlacedImage = {
+          id: crypto.randomUUID(),
+          name,
+          url: src,
+          image: img,
+          frame: {
+            ...base,
+            x: base.x + offset,
+            y: base.y + offset,
+          },
+        };
+        setImages((current) => {
+          const next = [...current, placed];
+          imagesRef.current = next;
+          return next;
+        });
+        setSelectedId(placed.id);
+        setError(null);
+        resolve({ id: placed.id });
+      };
+      img.onerror = () => {
+        if (objectUrl) URL.revokeObjectURL(src);
+        if (!mountedRef.current) {
+          reject(new Error("Editor unmounted"));
+          return;
+        }
+        setError("Couldn't read this image");
+        reject(new Error("Couldn't read this image"));
+      };
+      img.src = src;
+    });
+  }
+
   function loadFiles(fileList: FileList | File[]) {
     const files = [...fileList].filter((file) => file.type.startsWith("image/"));
     if (files.length === 0) {
@@ -194,80 +307,104 @@ export function ClipEditor() {
     setError(null);
     const start = nextSlotRef.current;
     nextSlotRef.current += files.length;
-    files.forEach((file, index) => loadFile(file, start + index));
+    files.forEach((file, index) => {
+      const src = URL.createObjectURL(file);
+      void placeImageFromSrc(src, nameFromFile(file), start + index, true);
+    });
   }
 
   loadFilesRef.current = loadFiles;
 
-  function loadFile(file: File, slot: number) {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      if (!mountedRef.current) {
-        URL.revokeObjectURL(url);
-        return;
-      }
-      if (img.naturalWidth === 0 || img.naturalHeight === 0) {
-        URL.revokeObjectURL(url);
-        setError("Couldn't read this image");
-        return;
-      }
-      const count = sliceCountRef.current;
-      const base = containFrame(
-        img.naturalWidth,
-        img.naturalHeight,
-        tileWidthRef.current * count,
-        tileHeightRef.current,
+  async function loadImageFromAgent(
+    input: LoadImageInput,
+  ): Promise<{ id: string }> {
+    const resolved = await resolveImageSource(input);
+    if (!mountedRef.current) {
+      if (resolved.objectUrl) URL.revokeObjectURL(resolved.src);
+      throw new Error("Editor unmounted");
+    }
+    const slot = nextSlotRef.current;
+    nextSlotRef.current += 1;
+    try {
+      return await placeImageFromSrc(
+        resolved.src,
+        resolved.name,
+        slot,
+        resolved.objectUrl,
       );
-      const offset = slot * PLACE_OFFSET;
-      const dot = file.name.lastIndexOf(".");
-      const name = (dot > 0 ? file.name.slice(0, dot) : file.name) || "slice";
-      const placed: PlacedImage = {
-        id: crypto.randomUUID(),
-        name,
-        url,
-        image: img,
-        frame: {
-          ...base,
-          x: base.x + offset,
-          y: base.y + offset,
-        },
-      };
-      setImages((current) => {
-        const next = [...current, placed];
-        imagesRef.current = next;
-        return next;
-      });
-      setSelectedId(placed.id);
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      if (!mountedRef.current) return;
-      setError("Couldn't read this image");
-    };
-    img.src = url;
+    } catch (error) {
+      throw error instanceof Error ? error : new Error("Couldn't read this image");
+    }
   }
 
-  function handleExport() {
-    const first = images[0];
-    if (!first) return;
+  function setConfigFromAgent(patch: AgentConfigPatch) {
+    if (patch.sliceCount != null) updateSliceCount(patch.sliceCount);
+    if (patch.tileWidth != null) updateTileWidth(patch.tileWidth);
+    if (patch.tileHeight != null) updateTileHeight(patch.tileHeight);
+    if (patch.background != null) updateBackground(patch.background);
+    if (patch.radius != null) updateRadius(patch.radius);
+  }
+
+  function handleExport(): Promise<void> {
+    const snapshot = imagesRef.current;
+    const first = snapshot[0];
+    if (!first) {
+      return Promise.reject(new Error("No images to export"));
+    }
     setError(null);
-    startExport(async () => {
-      try {
-        await exportSlices({
-          images,
-          sliceCount,
-          tileWidth,
-          tileHeight,
-          background,
-          radius,
-          fileName: first.name,
-        });
-      } catch {
-        setError("Export failed. Try again.");
-      }
+    return new Promise((resolve, reject) => {
+      startExport(async () => {
+        try {
+          await exportSlices({
+            images: snapshot,
+            sliceCount: sliceCountRef.current,
+            tileWidth: tileWidthRef.current,
+            tileHeight: tileHeightRef.current,
+            background: backgroundRef.current,
+            radius: radiusRef.current,
+            fileName: first.name,
+          });
+          resolve();
+        } catch {
+          setError("Export failed. Try again.");
+          reject(new Error("Export failed"));
+        }
+      });
     });
   }
+
+  handlersRef.current = {
+    getState: () => ({
+      sliceCount: sliceCountRef.current,
+      tileWidth: tileWidthRef.current,
+      tileHeight: tileHeightRef.current,
+      background: backgroundRef.current,
+      radius: radiusRef.current,
+      selectedId: selectedIdRef.current,
+      previewOpen: previewOpenRef.current,
+      exporting: exportingRef.current,
+      error: errorRef.current,
+      images: imagesRef.current.map((item) => ({
+        id: item.id,
+        name: item.name,
+        frame: { ...item.frame },
+      })),
+    }),
+    setConfig: setConfigFromAgent,
+    loadImage: loadImageFromAgent,
+    clear: clearImages,
+    select: setSelectedId,
+    remove: removeImage,
+    reorder: reorderImage,
+    setFrame: (id, frame) => {
+      if (!imagesRef.current.some((item) => item.id === id)) {
+        throw new Error(`Unknown image id: ${id}`);
+      }
+      updateFrame(id, frame);
+    },
+    preview: (open = true) => setPreviewOpen(open),
+    export: handleExport,
+  };
 
   return (
     <div
@@ -294,6 +431,7 @@ export function ClipEditor() {
         accept="image/*"
         multiple
         className="sr-only"
+        data-agent="file-input"
         onChange={(event) => {
           const fileList = event.target.files;
           if (fileList && fileList.length > 0) loadFiles(fileList);
@@ -313,12 +451,14 @@ export function ClipEditor() {
           onSliceCount={updateSliceCount}
           onTileWidth={updateTileWidth}
           onTileHeight={updateTileHeight}
-          onBackground={setBackground}
+          onBackground={updateBackground}
           onRadius={updateRadius}
           onPick={openPicker}
           onNew={clearImages}
           onPreview={() => setPreviewOpen(true)}
-          onExport={handleExport}
+          onExport={() => {
+            void handleExport();
+          }}
           displayWidth={displaySize.viewW}
           displayHeight={displaySize.viewH}
         />

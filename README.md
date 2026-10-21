@@ -13,6 +13,14 @@ pnpm dev
 
 Open [http://localhost:3004](http://localhost:3004).
 
+## Computer use / agent API
+
+Agents (e.g. Codex computer use) can drive the editor without guessing the canvas:
+
+- Manifest: [http://localhost:3004/agent.json](http://localhost:3004/agent.json) — DOM `[data-agent]` selectors and JS method docs.
+- Page global: `window.SliceForX` after the editor mounts — `loadImage`, `setConfig`, `setFrame`, `preview`, `export`, `getState`, `help`, …
+
+Prefer `loadImage({ base64 })` when a remote URL is blocked by CORS. Prefer `setFrame` over screenshot-based dragging on the canvas.
 
 ## Shot
 
@@ -20,6 +28,10 @@ Open [http://localhost:3004](http://localhost:3004).
 
 
 ## Changelog
+
+### 0.2.4 — 2026-10-21
+
+- Add a computer-use control surface: `/agent.json`, stable `data-agent` markers, and `window.SliceForX` (URL/base64 load, config, frames, export).
 
 ### 0.2.3 — 2026-10-21
 

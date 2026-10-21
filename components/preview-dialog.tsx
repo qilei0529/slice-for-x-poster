@@ -212,6 +212,7 @@ function MediaScroller({
         <button
           type="button"
           aria-label="Scroll left"
+          data-agent="preview-scroll-left"
           className="absolute group-hover:opacity-100 opacity-0 transition-opacity duration-300 top-1/2 left-3 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#3a3a3a] hover:bg-[#5a5a5a] cursor-pointer text-white"
           onClick={() => scrollMedia(scrollerRef.current, -1)}
         >
@@ -222,6 +223,7 @@ function MediaScroller({
         <button
           type="button"
           aria-label="Scroll right"
+          data-agent="preview-scroll-right"
           className="absolute group-hover:opacity-100 opacity-0 transition-opacity duration-300 top-1/2 right-3 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#3a3a3a] hover:bg-[#5a5a5a] cursor-pointer text-white"
           onClick={() => scrollMedia(scrollerRef.current, 1)}
         >

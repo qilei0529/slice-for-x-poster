@@ -350,6 +350,7 @@ export function Stage({
                 >
                   <div
                     aria-label="Drag image"
+                    data-agent="drag-image"
                     className="absolute inset-0 touch-none"
                     style={{
                       cursor: selected
@@ -392,6 +393,7 @@ export function Stage({
                       <button
                         type="button"
                         aria-label="Remove image"
+                        data-agent="remove-image"
                         className="group flex size-6 cursor-pointer items-center justify-center"
                         onPointerDown={(event) => {
                           event.stopPropagation();
@@ -409,6 +411,7 @@ export function Stage({
                       <button
                         type="button"
                         aria-label="Bring to front"
+                        data-agent="bring-front"
                         disabled={index === images.length - 1}
                         className="flex size-6 cursor-pointer items-center justify-center text-white disabled:cursor-default disabled:opacity-40"
                         onPointerDown={(event) => {
@@ -426,6 +429,7 @@ export function Stage({
                       <button
                         type="button"
                         aria-label="Send to back"
+                        data-agent="send-back"
                         disabled={index === 0}
                         className="flex size-6 cursor-pointer items-center justify-center text-white disabled:cursor-default disabled:opacity-40"
                         onPointerDown={(event) => {
@@ -448,6 +452,7 @@ export function Stage({
                           key={handle.corner}
                           type="button"
                           aria-label={`Resize ${handle.label}`}
+                          data-agent={`resize-${handle.corner}`}
                           className="absolute z-10 size-3.5 -translate-x-1/2 -translate-y-1/2 touch-none"
                           style={{
                             left: handle.left,
@@ -478,6 +483,7 @@ export function Stage({
           ) : (
             <button
               type="button"
+              data-agent="stage-pick"
               onClick={() => {
                 if (panMovedRef.current) return;
                 onPick();

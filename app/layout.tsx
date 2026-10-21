@@ -14,6 +14,16 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Slice for X",
   description: "Slice one picture into portrait tiles for X.",
+  alternates: {
+    types: {
+      "application/json": [
+        {
+          url: "/agent.json",
+          title: "Agent API",
+        },
+      ],
+    },
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

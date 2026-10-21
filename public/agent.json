@@ -1,0 +1,246 @@
+{
+  "name": "Slice for X",
+  "version": "0.2.4",
+  "description": "Slice one picture into portrait tiles for an X post. Client-only editor with a computer-use control surface.",
+  "home": "/",
+  "discovery": {
+    "manifest": "/agent.json",
+    "jsGlobal": "window.SliceForX"
+  },
+  "workflow": [
+    "Open / and wait for window.SliceForX (or use DOM [data-agent] clicks).",
+    "loadImage({ base64 }) or loadImage({ url }) — prefer base64 when CORS blocks fetch.",
+    "setConfig({ sliceCount, tileWidth, tileHeight, background, radius }) as needed.",
+    "Use setFrame(id, frame) for placement; avoid relying on canvas drag via screenshots.",
+    "preview(true) to review, then export() to download a ZIP of JPEGs."
+  ],
+  "domActions": [
+    {
+      "id": "choose-image",
+      "description": "Open the file picker to add an image",
+      "selector": "[data-agent='choose-image']",
+      "role": "button"
+    },
+    {
+      "id": "file-input",
+      "description": "Hidden multi file input (image/*)",
+      "selector": "[data-agent='file-input']",
+      "role": "textbox"
+    },
+    {
+      "id": "stage-pick",
+      "description": "Empty stage CTA that opens the file picker",
+      "selector": "[data-agent='stage-pick']",
+      "role": "button"
+    },
+    {
+      "id": "new",
+      "description": "Clear the canvas",
+      "selector": "[data-agent='new']",
+      "role": "button"
+    },
+    {
+      "id": "preview",
+      "description": "Open X-style preview dialog",
+      "selector": "[data-agent='preview']",
+      "role": "button"
+    },
+    {
+      "id": "export",
+      "description": "Export tiles as a ZIP of JPEGs",
+      "selector": "[data-agent='export']",
+      "role": "button"
+    },
+    {
+      "id": "fewer-tiles",
+      "description": "Decrease tile count (min 1)",
+      "selector": "[data-agent='fewer-tiles']",
+      "role": "button"
+    },
+    {
+      "id": "more-tiles",
+      "description": "Increase tile count (max 4)",
+      "selector": "[data-agent='more-tiles']",
+      "role": "button"
+    },
+    {
+      "id": "tile-width",
+      "description": "Tile width in pixels",
+      "selector": "[data-agent='tile-width']",
+      "role": "spinbutton"
+    },
+    {
+      "id": "tile-height",
+      "description": "Tile height in pixels",
+      "selector": "[data-agent='tile-height']",
+      "role": "spinbutton"
+    },
+    {
+      "id": "corner-radius",
+      "description": "Image corner radius",
+      "selector": "[data-agent='corner-radius']",
+      "role": "spinbutton"
+    },
+    {
+      "id": "bg-black",
+      "description": "Background preset black",
+      "selector": "[data-agent='bg-black']",
+      "role": "button"
+    },
+    {
+      "id": "bg-white",
+      "description": "Background preset white",
+      "selector": "[data-agent='bg-white']",
+      "role": "button"
+    },
+    {
+      "id": "bg-light-gray",
+      "description": "Background preset light gray",
+      "selector": "[data-agent='bg-light-gray']",
+      "role": "button"
+    },
+    {
+      "id": "bg-custom",
+      "description": "Custom background color input",
+      "selector": "[data-agent='bg-custom']",
+      "role": "textbox"
+    },
+    {
+      "id": "theme-toggle",
+      "description": "Toggle dark / light theme",
+      "selector": "[data-agent='theme-toggle']",
+      "role": "button"
+    },
+    {
+      "id": "drag-image",
+      "description": "Selected image drag surface (prefer setFrame via JS API)",
+      "selector": "[data-agent='drag-image']",
+      "role": "generic"
+    },
+    {
+      "id": "remove-image",
+      "description": "Remove the selected image",
+      "selector": "[data-agent='remove-image']",
+      "role": "button"
+    },
+    {
+      "id": "bring-front",
+      "description": "Bring selected image to front",
+      "selector": "[data-agent='bring-front']",
+      "role": "button"
+    },
+    {
+      "id": "send-back",
+      "description": "Send selected image to back",
+      "selector": "[data-agent='send-back']",
+      "role": "button"
+    },
+    {
+      "id": "resize-nw",
+      "description": "Resize handle top-left",
+      "selector": "[data-agent='resize-nw']",
+      "role": "button"
+    },
+    {
+      "id": "resize-ne",
+      "description": "Resize handle top-right",
+      "selector": "[data-agent='resize-ne']",
+      "role": "button"
+    },
+    {
+      "id": "resize-sw",
+      "description": "Resize handle bottom-left",
+      "selector": "[data-agent='resize-sw']",
+      "role": "button"
+    },
+    {
+      "id": "resize-se",
+      "description": "Resize handle bottom-right",
+      "selector": "[data-agent='resize-se']",
+      "role": "button"
+    },
+    {
+      "id": "dialog-close",
+      "description": "Close dialog",
+      "selector": "[data-agent='dialog-close']",
+      "role": "button"
+    },
+    {
+      "id": "preview-scroll-left",
+      "description": "Scroll preview carousel left",
+      "selector": "[data-agent='preview-scroll-left']",
+      "role": "button"
+    },
+    {
+      "id": "preview-scroll-right",
+      "description": "Scroll preview carousel right",
+      "selector": "[data-agent='preview-scroll-right']",
+      "role": "button"
+    }
+  ],
+  "jsApi": {
+    "global": "window.SliceForX",
+    "notes": [
+      "Mounted while the editor is on screen; call help() for a short summary.",
+      "Remote URL loads need CORS; use base64 when fetch fails.",
+      "Canvas move/resize is unreliable via screenshots — use setFrame."
+    ],
+    "methods": [
+      {
+        "name": "getState",
+        "signature": "getState(): AgentState",
+        "description": "Serializable config, selection, and image frames (no HTMLImageElement)."
+      },
+      {
+        "name": "setConfig",
+        "signature": "setConfig({ sliceCount?, tileWidth?, tileHeight?, background?, radius? })",
+        "description": "Update canvas settings with the same clamps as the UI."
+      },
+      {
+        "name": "loadImage",
+        "signature": "loadImage({ url, name? }) | loadImage({ base64, mime?, name? })",
+        "description": "Decode and place an image; returns { id }. Prefer base64 if CORS blocks URL."
+      },
+      {
+        "name": "clear",
+        "signature": "clear()",
+        "description": "Clear all images (same as New)."
+      },
+      {
+        "name": "select",
+        "signature": "select(id | null)",
+        "description": "Select an image or clear selection."
+      },
+      {
+        "name": "remove",
+        "signature": "remove(id)",
+        "description": "Remove an image by id."
+      },
+      {
+        "name": "reorder",
+        "signature": "reorder(id, 'front' | 'back')",
+        "description": "Change z-order."
+      },
+      {
+        "name": "setFrame",
+        "signature": "setFrame(id, { x, y, width, height })",
+        "description": "Set image placement on the canvas (preferred over drag)."
+      },
+      {
+        "name": "preview",
+        "signature": "preview(open?)",
+        "description": "Open or close the preview dialog (default open=true)."
+      },
+      {
+        "name": "export",
+        "signature": "export(): Promise<void>",
+        "description": "Download a ZIP of JPEG tiles (same as Export JPG)."
+      },
+      {
+        "name": "help",
+        "signature": "help(): string",
+        "description": "Short method list; also see this manifest."
+      }
+    ]
+  }
+}

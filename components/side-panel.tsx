@@ -28,9 +28,9 @@ function isSameColor(a: string, b: string) {
 }
 
 const BACKGROUND_PRESETS = [
-  { label: "Black", value: "#000000" },
-  { label: "White", value: "#f4f4f4" },
-  { label: "Light gray", value: "#e0e0e0" },
+  { label: "Black", value: "#000000", agent: "bg-black" },
+  { label: "White", value: "#f4f4f4", agent: "bg-white" },
+  { label: "Light gray", value: "#e0e0e0", agent: "bg-light-gray" },
 ] as const;
 
 const paletteSwatchStyle = {
@@ -110,7 +110,13 @@ export function SidePanel({
         description={`Slice picture into tiles.`}
       >
         {hasImage ? (
-          <Button type="button" variant="outline" size="sm" onClick={onNew}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            data-agent="new"
+            onClick={onNew}
+          >
             New
           </Button>
         ) : null}
@@ -124,12 +130,14 @@ export function SidePanel({
             <div className="flex items-center gap-1">
               <TileEdgeInput
                 label="Tile width"
+                agent="tile-width"
                 value={tileWidth}
                 onChange={onTileWidth}
               />
               <span className={fieldLabelClass}>×</span>
               <TileEdgeInput
                 label="Tile height"
+                agent="tile-height"
                 value={tileHeight}
                 onChange={onTileHeight}
               />
@@ -144,6 +152,7 @@ export function SidePanel({
                 variant="outline"
                 size="sm"
                 aria-label="Fewer tiles"
+                data-agent="fewer-tiles"
                 disabled={sliceCount <= MIN_SLICES}
                 onClick={() => onSliceCount(sliceCount - 1)}
               >
@@ -157,6 +166,7 @@ export function SidePanel({
                 variant="outline"
                 size="sm"
                 aria-label="More tiles"
+                data-agent="more-tiles"
                 disabled={sliceCount >= MAX_SLICES}
                 onClick={() => onSliceCount(sliceCount + 1)}
               >
@@ -197,6 +207,7 @@ export function SidePanel({
                     key={preset.value}
                     type="button"
                     aria-label={preset.label}
+                    data-agent={preset.agent}
                     aria-pressed={selected}
                     onClick={() => selectPreset(preset.value)}
                     className={cn(
@@ -222,6 +233,7 @@ export function SidePanel({
                   type="color"
                   value={customColor ?? "#ff3b30"}
                   aria-label="Custom color"
+                  data-agent="bg-custom"
                   aria-pressed={customColor != null}
                   onChange={(event) => selectCustom(event.target.value)}
                   className="absolute inset-0 size-full cursor-pointer opacity-0"
@@ -232,7 +244,12 @@ export function SidePanel({
         </FieldGroup>
 
         <FieldGroup label="Image">
-          <Button type="button" variant="outline" onClick={onPick}>
+          <Button
+            type="button"
+            variant="outline"
+            data-agent="choose-image"
+            onClick={onPick}
+          >
             {hasImage ? "Add image" : "Choose image"}
           </Button>
 
@@ -245,6 +262,7 @@ export function SidePanel({
               step={1}
               value={radius}
               aria-label="Corner radius"
+              data-agent="corner-radius"
               onValueChange={(value) => {
                 const next = Number(value);
                 onRadius(Number.isNaN(next) ? 0 : next);
@@ -265,6 +283,7 @@ export function SidePanel({
         <Button
           type="button"
           variant="outline"
+          data-agent="preview"
           disabled={!hasImage}
           onClick={onPreview}
         >
@@ -272,6 +291,7 @@ export function SidePanel({
         </Button>
         <Button
           type="button"
+          data-agent="export"
           disabled={!hasImage || exporting}
           onClick={onExport}
         >
@@ -284,10 +304,12 @@ export function SidePanel({
 
 function TileEdgeInput({
   label,
+  agent,
   value,
   onChange,
 }: {
   label: string;
+  agent: string;
   value: number;
   onChange: (next: number) => void;
 }) {
@@ -315,6 +337,7 @@ function TileEdgeInput({
       step={1}
       value={draft}
       aria-label={label}
+      data-agent={agent}
       size="sm"
       onFocus={() => {
         focused.current = true;

@@ -47,6 +47,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       className={cn(className)}
       icon={resolved === "dark" ? <ThemeLightIcon /> : <ThemeDarkIcon />}
       aria-label={next === "dark" ? "Switch to dark" : "Switch to light"}
+      data-agent="theme-toggle"
       onClick={(event) => {
         void startTransition(event, {
           onUpdate: () => setTheme(next),
