@@ -488,7 +488,7 @@ export function Stage({
                 if (panMovedRef.current) return;
                 onPick();
               }}
-              className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl border-2 border-dashed border-neutral-400/20 px-8 py-8 w-[320px] md:w-[400px] bg-gray-400/10 hover:bg-primary/5 hover:border-primary/20 transition-colors duration-200"
+              className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl border-2 border-dashed border-neutral-400/20 p-4 md:p-8 w-[240px] md:w-[400px] bg-gray-400/10 hover:bg-primary/5 hover:border-primary/20 transition-colors duration-200"
             >
               <span className=" px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                 Drop, paste, or click to choose an image
@@ -507,11 +507,14 @@ function frameBorderRadius(radius: number, frame: Frame) {
   return `${(curve / frame.width) * 100}% / ${(curve / frame.height) * 100}%`;
 }
 
-const CANVAS_INSET = 100;
+function canvasInset(boxW: number) {
+  return boxW < 640 ? 12 : 100;
+}
 
 function fitCanvas(boxW: number, boxH: number, logicalW: number, logicalH: number) {
-  const availW = Math.max(0, boxW - CANVAS_INSET * 2);
-  const availH = Math.max(0, boxH - CANVAS_INSET * 2);
+  const inset = canvasInset(boxW);
+  const availW = Math.max(0, boxW - inset * 2);
+  const availH = Math.max(0, boxH - inset * 2);
   if (availW === 0 || availH === 0) {
     return { scale: 0, viewW: 0, viewH: 0 };
   }
