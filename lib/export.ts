@@ -1,5 +1,7 @@
 import { drawScene, type PlacedImage } from "@/lib/scene";
 
+const EXPORT_JPEG_QUALITY = 0.92;
+
 export async function exportSlices(options: {
   images: PlacedImage[];
   sliceCount: number;
@@ -50,7 +52,7 @@ export async function exportSlices(options: {
       tileWidth,
       tileHeight,
     );
-    files[`${base}-${index + 1}.png`] = await canvasToPng(slice);
+    files[`${base}-${index + 1}.jpg`] = await canvasToJpeg(slice);
   }
 
   const zipped = await new Promise<Uint8Array>((resolve, reject) => {
@@ -66,18 +68,22 @@ export async function exportSlices(options: {
   downloadBytes(zipped, `${base}.zip`);
 }
 
-function canvasToPng(canvas: HTMLCanvasElement): Promise<Uint8Array> {
+function canvasToJpeg(canvas: HTMLCanvasElement): Promise<Uint8Array> {
   return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error("PNG export failed"));
-        return;
-      }
-      blob.arrayBuffer().then(
-        (buffer) => resolve(new Uint8Array(buffer)),
-        reject,
-      );
-    }, "image/png");
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error("JPEG export failed"));
+          return;
+        }
+        blob.arrayBuffer().then(
+          (buffer) => resolve(new Uint8Array(buffer)),
+          reject,
+        );
+      },
+      "image/jpeg",
+      EXPORT_JPEG_QUALITY,
+    );
   });
 }
 

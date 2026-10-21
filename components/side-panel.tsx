@@ -275,7 +275,7 @@ export function SidePanel({
           disabled={!hasImage || exporting}
           onClick={onExport}
         >
-          {exporting ? "Exporting…" : "Export PNG"}
+          {exporting ? "Exporting…" : "Export JPG"}
         </Button>
       </PanelFoot>
     </Panel>
