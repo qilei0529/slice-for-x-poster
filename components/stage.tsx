@@ -488,9 +488,9 @@ export function Stage({
                 if (panMovedRef.current) return;
                 onPick();
               }}
-              className="absolute inset-0 flex items-center justify-center"
+              className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl border-2 border-dashed border-neutral-400/20 px-8 py-8 w-[320px] md:w-[400px] bg-gray-400/10 hover:bg-primary/5 hover:border-primary/20 transition-colors duration-200"
             >
-              <span className="rounded-full bg-black/50 px-4 py-2 text-sm text-white backdrop-blur-sm">
+              <span className=" px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
                 Drop, paste, or click to choose an image
               </span>
             </button>
