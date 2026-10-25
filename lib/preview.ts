@@ -1,7 +1,5 @@
 import { drawScene, type PlacedImage } from "@/lib/scene";
 
-const PREVIEW_TILE_WIDTH = 400;
-
 export function revokePreviewUrls(urls: string[]) {
   for (const url of urls) URL.revokeObjectURL(url);
 }
@@ -14,16 +12,14 @@ export async function renderPreviewSlices(options: {
   background: string;
   radius: number;
 }) {
-  const scale = PREVIEW_TILE_WIDTH / options.tileWidth;
-  const tileW = PREVIEW_TILE_WIDTH;
-  const tileH = Math.round(options.tileHeight * scale);
+  // Match export pixel size so preview tiles are the same dimensions as the zip.
+  const { tileWidth: tileW, tileHeight: tileH } = options;
   const full = document.createElement("canvas");
   full.width = tileW * options.sliceCount;
   full.height = tileH;
   const ctx = full.getContext("2d");
   if (!ctx) throw new Error("Canvas unavailable");
 
-  ctx.setTransform(scale, 0, 0, scale, 0, 0);
   drawScene(ctx, {
     sliceCount: options.sliceCount,
     tileWidth: options.tileWidth,
